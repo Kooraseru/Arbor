@@ -14,6 +14,7 @@ Version slots mean:
 
 ```diff
 + Added GitHub Pages docs setup and examples-focused documentation.
+- Updated GitHub Actions to reduce Node 20 deprecation warnings.
 - Removed GitHub Wiki as the canonical documentation source.
 ```
 
@@ -28,6 +29,8 @@ Version slots mean:
 ### Repository
 
 - Added `.github/workflows/pages.yml` to build and deploy `docs/` through GitHub Pages.
+- Updated workflow checkout steps to `actions/checkout@v5`.
+- Updated Pages configuration to `actions/configure-pages@v6` with Pages enablement.
 - Removed the old GitHub Wiki sync workflow and `wiki/` drafts.
 
 ## 1.1.0 - 2026-07-08
