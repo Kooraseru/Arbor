@@ -24,6 +24,12 @@ powershell -ExecutionPolicy Bypass -File tools/rules/run-architecture-validator.
 
 For repository CI, mirror these checks with paths relative to the package root.
 
+## Releases
+
+Stable package milestones are recorded in `CHANGELOG.md`, starting with `1.0.0`.
+
+Every commit pushed to `main` or `master` creates a lightweight GitHub release tagged as `commit-<short-sha>`. That keeps commit snapshots available without pretending each commit is a new semver-stable milestone.
+
 ## Design Notes
 
 Runtime discovery does not create static public API by itself. If a caller needs compile-time key checks, use analyzer-visible child-name discovery, generated surfaces, or another explicit typed surface.

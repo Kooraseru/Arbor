@@ -10,15 +10,15 @@
 <p align="center">
   <br>
   <a href="https://github.com/Kooraseru/TypeManager/wiki"><img alt="Wiki" src="https://shieldcn.dev/badge/Wiki.svg?variant=ghost&logo=lu%3AFlower"></a>
-  <a href="https://github.com/Kooraseru/TypeManager/releases"><img alt="Release" src="https://shieldcn.dev/github/Kooraseru/TypeManager/release.svg?variant=ghost"></a>
-  <a href="https://github.com/Kooraseru/TypeManager/issues"><img alt="Issues" src="https://shieldcn.dev/github/Kooraseru/TypeManager/issues.svg?variant=ghost"></a>
+  <a href="https://github.com/Kooraseru/TypeManager/releases"><img alt="Release" src="https://shieldcn.dev/badge/Release-v1.0.0.svg?variant=ghost&logo=ri%3AGitBranchLine"></a>
+  <a href="https://github.com/Kooraseru/TypeManager/issues"><img alt="Issues" src="https://shieldcn.dev/badge/Issues-0%20open.svg?variant=ghost&logo=ri%3AErrorWarningLine"></a>
   <br>
-  <a href="https://github.com/Kooraseru/TypeManager"><img alt="Stars" src="https://shieldcn.dev/github/Kooraseru/TypeManager/stars.svg?variant=ghost"></a>
-  <a href="CONTRIBUTING.md"><img alt="Contributors" src="https://shieldcn.dev/github/Kooraseru/TypeManager/contributors.svg?variant=ghost"></a>
-  <a href="https://github.com/sponsors/Kooraseru"><img alt="Sponsor" src="https://shieldcn.dev/github/sponsors/Kooraseru.svg?variant=ghost"></a>
+  <a href="https://github.com/Kooraseru/TypeManager"><img alt="Stars" src="https://shieldcn.dev/badge/Stars-0.svg?variant=ghost&logo=ri%3AStarLine"></a>
+  <a href="CONTRIBUTING.md"><img alt="Contributors" src="https://shieldcn.dev/badge/Contributors-1.svg?variant=ghost&logo=ri%3ATeamLine"></a>
+  <a href="https://github.com/sponsors/Kooraseru"><img alt="Sponsor" src="https://shieldcn.dev/badge/Sponsors-0.svg?variant=ghost&logo=ri%3AHeartLine"></a>
   <br>
   <a href="CHANGELOG.md"><img alt="Changelog" src="https://shieldcn.dev/badge/Changelog.svg?variant=ghost&logo=ri%3APiTimer"></a>
-  <a href="LICENSE"><img alt="License" src="https://shieldcn.dev/github/Kooraseru/TypeManager/license.svg?variant=ghost"></a>
+  <a href="LICENSE"><img alt="License" src="https://shieldcn.dev/badge/License-Apache%202.0.svg?variant=ghost&logo=ri%3AScales3Line"></a>
   <img alt="Flag" src="https://shieldcn.dev/flag/kp.svg?variant=ghost">
 </p>
 
@@ -39,10 +39,10 @@
 
 ## Status
 
-Experimental package. The current implementation is published for early package testing.
+Initial stable package release.
 
 > [!WARNING]
-> Do not treat this package as public-stable until analyzer parity and CI are confirmed.
+> Typed child-name discovery still depends on analyzer/toolchain behavior. Validate your target environment before treating analyzer-derived child names as a published API guarantee.
 
 ## Install
 
@@ -237,16 +237,3 @@ TypeManager/
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).
-
-## Release Blockers
-
-Before a public release:
-
-```txt
-confirm extraction analyzer behavior
-replace placeholder CI with real Luau analysis
-document the supported install layout
-decide package manager metadata target, if any
-```
-
-See [EXPORT.md](EXPORT.md) for the repository setup checklist.
