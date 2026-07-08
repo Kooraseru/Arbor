@@ -48,7 +48,7 @@ The package includes `.github/workflows/sync-wiki.yml` to publish package-local 
 The workflow:
 
 ```txt
-runs on wiki changes pushed to main
+runs on wiki changes pushed to main or master
 can be run manually from GitHub Actions
 skips wiki/README.md
 pushes only when generated wiki contents changed

@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - master
     paths:
       - "wiki/**"
 
@@ -21,8 +22,10 @@ jobs:
 
       - name: Checkout wiki
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-remote
+          git clone "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-remote
 
       - name: Copy wiki pages
         shell: bash

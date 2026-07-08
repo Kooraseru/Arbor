@@ -8,7 +8,7 @@ The repository workflow at `.github/workflows/sync-wiki.yml` publishes these pag
 https://github.com/Kooraseru/TypeManager.wiki.git
 ```
 
-It runs when `wiki/**` changes on `main`, and it can also be run manually from GitHub Actions.
+It runs when `wiki/**` changes on `main` or `master`, and it can also be run manually from GitHub Actions.
 
 Manual fallback:
 
