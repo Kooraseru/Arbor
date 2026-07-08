@@ -1,26 +1,27 @@
-<div align="center">
-  <h1>TypeManager</h1>
-  <p>Analyzer-facing type helpers for Luau/Roblox package surfaces.</p>
-  <p>
-    TypeManager helps modular packages keep dynamic runtime loading without giving up compile-time key checks.
-    It is meant for owned child trees: folders where the package owns the children, discovers them at runtime, and wants the analyzer to know the child names.
-  </p>
-</div>
-
 <p align="center">
+  <a href="https://github.com/Kooraseru/Arbor/wiki"><img alt="Wiki" src="https://shieldcn.dev/badge/Wiki.svg?variant=ghost&logo=lu%3AFlower"></a>
+  <a href="https://github.com/Kooraseru/Arbor/releases"><img alt="Releases" src="https://shieldcn.dev/github/Kooraseru/Arbor/release.svg?variant=ghost"></a>
+  <a href="https://github.com/Kooraseru/Arbor/issues"><img alt="Issues" src="https://shieldcn.dev/github/Kooraseru/Arbor/issues.svg?variant=ghost&logo=ri%3APiWarning"></a>
   <br>
-  <a href="https://github.com/Kooraseru/TypeManager/wiki"><img alt="Wiki" src="https://shieldcn.dev/badge/Wiki.svg?variant=ghost&logo=lu%3AFlower"></a>
-  <a href="https://github.com/Kooraseru/TypeManager/releases"><img alt="Release" src="https://shieldcn.dev/badge/Release-v1.0.0.svg?variant=ghost&logo=ri%3AGitBranchLine"></a>
-  <a href="https://github.com/Kooraseru/TypeManager/issues"><img alt="Issues" src="https://shieldcn.dev/badge/Issues-0%20open.svg?variant=ghost&logo=ri%3AErrorWarningLine"></a>
-  <br>
-  <a href="https://github.com/Kooraseru/TypeManager"><img alt="Stars" src="https://shieldcn.dev/badge/Stars-0.svg?variant=ghost&logo=ri%3AStarLine"></a>
-  <a href="CONTRIBUTING.md"><img alt="Contributors" src="https://shieldcn.dev/badge/Contributors-1.svg?variant=ghost&logo=ri%3ATeamLine"></a>
-  <a href="https://github.com/sponsors/Kooraseru"><img alt="Sponsor" src="https://shieldcn.dev/badge/Sponsors-0.svg?variant=ghost&logo=ri%3AHeartLine"></a>
+  <a href="https://github.com/Kooraseru/Arbor"><img alt="Stars" src="https://shieldcn.dev/github/Kooraseru/Arbor/stars.svg?variant=ghost"></a>
+   <a href="https://github.com/Kooraseru/Arbor/releases"><img alt="Releases" src="https://shieldcn.dev/github/Kooraseru/Arbor/downloads.svg?variant=ghost"></a>
+  <a href="https://github.com/Kooraseru/Arbor/forks"><img alt="Forks" src="https://shieldcn.dev/github/Kooraseru/Arbor/forks.svg?variant=ghost"></a>
+  <a href="https://github.com/Kooraseru/Arbor/graphs/contributors"><img alt="Contributors" src="https://shieldcn.dev/github/Kooraseru/Arbor/contributors.svg?variant=ghost"></a>
   <br>
   <a href="CHANGELOG.md"><img alt="Changelog" src="https://shieldcn.dev/badge/Changelog.svg?variant=ghost&logo=ri%3APiTimer"></a>
-  <a href="LICENSE"><img alt="License" src="https://shieldcn.dev/badge/License-Apache%202.0.svg?variant=ghost&logo=ri%3AScales3Line"></a>
-  <img alt="Flag" src="https://shieldcn.dev/flag/kp.svg?variant=ghost">
+  <a href="LICENSE"><img alt="License" src="https://shieldcn.dev/github/Kooraseru/Arbor/license.svg?variant=ghost"></a>
+  <img alt="Built In" src="https://shieldcn.dev/flag/kp.svg?variant=ghost">
 </p>
+
+---
+
+<div align="center">
+  <h1>Arbor</h1>
+  <p>Analyzer-friendly static tree helpers for Luau/Roblox package surfaces.</p>
+  <p>
+    Arbor is named after the Latin word for tree. It describes and exposes the static structure of owned instance trees, enabling analyzer-friendly navigation and compile-time type extraction.
+  </p>
+</div>
 
 ## Table Of Contents
 
@@ -46,15 +47,15 @@ Initial stable package release.
 
 ## Install
 
-Place `TypeManager` wherever your project or package manager exposes required modules.
+Place `Arbor` wherever your project or package manager exposes required modules.
 
 Require the package root through whatever module reference your environment provides:
 
 ```luau
-local TypeManager = require(path.to.TypeManager)
+local Arbor = require(path.to.Arbor)
 ```
 
-When used inside a standalone package, internal TypeManager requires use `@self` and focused child modules.
+When used inside a standalone package, internal Arbor requires use `@self` and focused child modules.
 
 > [!NOTE]
 > Package-manager metadata is intentionally not committed yet. First public export should choose the target install story instead of guessing between copy-folder, Wally, pesde, subtree, or another layout.
@@ -64,12 +65,12 @@ When used inside a standalone package, internal TypeManager requires use `@self`
 Use the root facade when you want fewer require lines:
 
 ```luau
-local TypeManager = require(path.to.TypeManager)
+local Arbor = require(path.to.Arbor)
 
-local LoadModuleMap = TypeManager.RuntimeLoaders.LoadModuleMap
+local LoadModuleMap = Arbor.RuntimeLoaders.LoadModuleMap
 
-export type ActionId = TypeManager.ChildNames<typeof(script)>
-export type ActionMap = TypeManager.ChildRecord<typeof(script), ActionDefinition>
+export type ActionId = Arbor.ChildNames<typeof(script)>
+export type ActionMap = Arbor.ChildRecord<typeof(script), ActionDefinition>
 
 local actions: ActionMap = LoadModuleMap.From(script, validateAction)
 
@@ -79,9 +80,9 @@ return actions
 Use focused modules when you want the simplest analyzer path:
 
 ```luau
-local ChildNames = require(path.to.TypeManager.InstanceTree.ChildNames)
-local ChildRecord = require(path.to.TypeManager.InstanceTree.ChildRecord)
-local LoadModuleMap = require(path.to.TypeManager.RuntimeLoaders.LoadModuleMap)
+local ChildNames = require(path.to.Arbor.InstanceTree.ChildNames)
+local ChildRecord = require(path.to.Arbor.InstanceTree.ChildRecord)
+local LoadModuleMap = require(path.to.Arbor.RuntimeLoaders.LoadModuleMap)
 
 export type ActionId = ChildNames.Of<typeof(script)>
 export type ActionMap = ChildRecord.Of<typeof(script), ActionDefinition>
@@ -96,21 +97,21 @@ return actions
 Root exported type aliases:
 
 ```txt
-TypeManager.ChildNames<T>
-TypeManager.ChildRecord<T, V>
-TypeManager.ChildOf<T, Name>
-TypeManager.ChildrenOfClass<T, ClassName>
-TypeManager.ModuleValidator<T>
+Arbor.ChildNames<T>
+Arbor.ChildRecord<T, V>
+Arbor.ChildOf<T, Name>
+Arbor.ChildrenOfClass<T, ClassName>
+Arbor.ModuleValidator<T>
 ```
 
 Root runtime facade:
 
 ```txt
-TypeManager.InstanceTree.ChildNames
-TypeManager.InstanceTree.ChildRecord
-TypeManager.InstanceTree.ChildOf
-TypeManager.InstanceTree.ChildrenOfClass
-TypeManager.RuntimeLoaders.LoadModuleMap
+Arbor.InstanceTree.ChildNames
+Arbor.InstanceTree.ChildRecord
+Arbor.InstanceTree.ChildOf
+Arbor.InstanceTree.ChildrenOfClass
+Arbor.RuntimeLoaders.LoadModuleMap
 ```
 
 Focused modules:
@@ -127,16 +128,18 @@ RuntimeLoaders/LoadModuleMap.From(root, validate)
 
 Longer guides live in the GitHub Wiki:
 
-- [Home](https://github.com/Kooraseru/TypeManager/wiki)
-- [Install](https://github.com/Kooraseru/TypeManager/wiki/Install)
-- [Analyzer Model](https://github.com/Kooraseru/TypeManager/wiki/Analyzer-Model)
-- [Type Functions](https://github.com/Kooraseru/TypeManager/wiki/Type-Functions)
-- [Runtime Loaders](https://github.com/Kooraseru/TypeManager/wiki/Runtime-Loaders)
-- [Package Boundaries](https://github.com/Kooraseru/TypeManager/wiki/Package-Boundaries)
-- [Export And CI](https://github.com/Kooraseru/TypeManager/wiki/Export-And-CI)
-- [FAQ](https://github.com/Kooraseru/TypeManager/wiki/FAQ)
+- [Home](https://github.com/Kooraseru/Arbor/wiki)
+- [Install](https://github.com/Kooraseru/Arbor/wiki/Install)
+- [Analyzer Model](https://github.com/Kooraseru/Arbor/wiki/Analyzer-Model)
+- [Type Functions](https://github.com/Kooraseru/Arbor/wiki/Type-Functions)
+- [Runtime Loaders](https://github.com/Kooraseru/Arbor/wiki/Runtime-Loaders)
+- [Package Boundaries](https://github.com/Kooraseru/Arbor/wiki/Package-Boundaries)
+- [Export And CI](https://github.com/Kooraseru/Arbor/wiki/Export-And-CI)
+- [FAQ](https://github.com/Kooraseru/Arbor/wiki/FAQ)
 
 ## Concepts
+
+`Arbor` is named after the Latin word for tree. The package is about owned instance-tree shape: direct child names, child records, child lookup, and small runtime loaders that preserve a typed boundary.
 
 `ChildNames<T>` returns a union of direct child names visible to the Luau analyzer.
 
@@ -195,9 +198,9 @@ confirm module return type strategy separately
 
 ## Package Boundaries
 
-TypeManager owns compile-time type surfaces and small helper conventions.
+Arbor owns analyzer-visible tree structure and small helper conventions.
 
-TypeManager must not own:
+Arbor must not own:
 
 ```txt
 runtime registries
@@ -213,7 +216,7 @@ descriptor identity
 ## Repository Layout
 
 ```txt
-TypeManager/
+Arbor/
   .github/
   wiki/
   .gitignore

@@ -39,5 +39,5 @@ jobs:
 
           gh release create "$tag" \
             --target "$COMMIT_SHA" \
-            --title "TypeManager ${tag}" \
+            --title "Arbor ${tag}" \
             --notes "Automated release for commit ${COMMIT_SHA}."

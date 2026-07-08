@@ -1,6 +1,6 @@
 # Changelog
 
-All notable TypeManager package changes should be recorded here.
+All notable Arbor package changes should be recorded here.
 
 ## 1.0.0 - 2026-07-08
 

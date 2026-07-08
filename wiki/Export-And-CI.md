@@ -5,7 +5,7 @@
 Recommended simple layout:
 
 ```txt
-TypeManager/
+Arbor/
   src/
     init.luau
     InstanceTree/
@@ -33,14 +33,14 @@ package extraction smoke test passes
 Use `0.x` while analyzer and extraction behavior are still being confirmed.
 
 > [!WARNING]
-> Do not release `1.0.0` until TypeManager behavior is proven in the target install and analyzer environments.
+> Do not release `1.0.0` until Arbor behavior is proven in the target install and analyzer environments.
 
 ## Wiki Publishing
 
 GitHub stores wiki pages in a separate repository:
 
 ```txt
-Kooraseru/TypeManager.wiki.git
+Kooraseru/Arbor.wiki.git
 ```
 
 The package includes `.github/workflows/sync-wiki.yml` to publish package-local `wiki/*.md` pages there.

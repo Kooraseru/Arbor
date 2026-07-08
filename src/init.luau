@@ -1,4 +1,4 @@
--- TypeManager/src/init.luau
+-- Arbor/src/init.luau
 --!strict
 
 --# Modules

@@ -1,18 +1,18 @@
-# TypeManager Rules
+# Arbor Rules
 
 Canonical: Yes
 
-These rules are intentionally small. TypeManager is a standalone Luau package, not a whole game repository.
+These rules are intentionally small. Arbor is a standalone Luau package, not a whole game repository.
 
 ## Purpose
 
-TypeManager answers one question:
+Arbor is named after the Latin word for tree. It answers one question:
 
 ```txt
-What does the Luau analyzer know?
+What static structure does the Luau analyzer know about an owned instance tree?
 ```
 
-It owns analyzer-facing type helpers, typed lookup conventions, and tiny validation-friendly loader primitives.
+It owns analyzer-facing tree helpers, typed lookup conventions, and tiny validation-friendly loader primitives.
 
 It does not own runtime registries, boot sequencing, serialization, dispatch parsing, descriptor identity, pipeline order, or package lookup.
 
@@ -22,7 +22,7 @@ It does not own runtime registries, boot sequencing, serialization, dispatch par
 - Keep repository metadata, docs, workflows, and wiki drafts at the repository root.
 - Keep `src/init.luau` as the root facade.
 - Keep focused helpers public under `src/InstanceTree/` and `src/RuntimeLoaders/`.
-- Do not add package dependencies unless TypeManager cannot perform its core job without them.
+- Do not add package dependencies unless Arbor cannot perform its core job without them.
 
 ## Type Safety
 

@@ -1,6 +1,6 @@
 # Analyzer Model
 
-TypeManager relies on analyzer-visible Roblox/host extern metadata.
+Arbor relies on analyzer-visible Roblox/host extern metadata.
 
 The important bit:
 
@@ -19,7 +19,7 @@ Origin
 Then:
 
 ```luau
-export type Names = TypeManager.ChildNames<typeof(workspace.Origin)>
+export type Names = Arbor.ChildNames<typeof(workspace.Origin)>
 ```
 
 can become:
@@ -52,7 +52,7 @@ whether a dynamic loader should be part of a public API
 
 Child metadata may depend on sourcemap/toolchain behavior.
 
-Before publishing a package that relies on TypeManager:
+Before publishing a package that relies on Arbor:
 
 ```txt
 test VS Code/Luau LSP

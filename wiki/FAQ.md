@@ -1,6 +1,6 @@
 # FAQ
 
-## Does TypeManager load modules at compile time?
+## Does Arbor load modules at compile time?
 
 No. Luau type functions inspect analyzer-visible types. Runtime loading still happens at runtime.
 
@@ -21,8 +21,8 @@ No. Runtime discovery does not create analyzer-visible type-function APIs. Root 
 It reduces require surface and exposes root type aliases like:
 
 ```luau
-TypeManager.ChildNames<T>
-TypeManager.ChildRecord<T, V>
+Arbor.ChildNames<T>
+Arbor.ChildRecord<T, V>
 ```
 
 The facade is static and explicit.

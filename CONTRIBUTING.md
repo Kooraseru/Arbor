@@ -1,6 +1,6 @@
 # Contributing
 
-TypeManager is intentionally small. Changes should preserve the split between compile-time type knowledge and runtime behavior.
+Arbor is intentionally small. Changes should preserve the split between compile-time type knowledge and runtime behavior.
 
 > [!IMPORTANT]
 > Runtime discovery and compile-time typing are separate concerns. Do not add runtime behavior here just because it helps a local package load modules.

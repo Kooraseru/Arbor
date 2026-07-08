@@ -1,6 +1,6 @@
 # Package Boundaries
 
-TypeManager answers:
+Arbor answers:
 
 ```txt
 What does the compiler/analyzer know?

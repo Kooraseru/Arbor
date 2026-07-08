@@ -3,7 +3,7 @@
 ## ChildNames
 
 ```luau
-export type Id = TypeManager.ChildNames<typeof(script)>
+export type Id = Arbor.ChildNames<typeof(script)>
 ```
 
 Returns a union of direct child names.
@@ -11,7 +11,7 @@ Returns a union of direct child names.
 ## ChildRecord
 
 ```luau
-export type Map = TypeManager.ChildRecord<typeof(script), ActionDefinition>
+export type Map = Arbor.ChildRecord<typeof(script), ActionDefinition>
 ```
 
 Returns a table shape whose keys are direct child names and whose values are the provided type.
@@ -19,7 +19,7 @@ Returns a table shape whose keys are direct child names and whose values are the
 ## ChildOf
 
 ```luau
-export type Child = TypeManager.ChildOf<typeof(script), "DefaultModule1">
+export type Child = Arbor.ChildOf<typeof(script), "DefaultModule1">
 ```
 
 Returns the analyzer-visible type of a direct child by name.
@@ -27,7 +27,7 @@ Returns the analyzer-visible type of a direct child by name.
 ## ChildrenOfClass
 
 ```luau
-export type ModuleChildren = TypeManager.ChildrenOfClass<typeof(script), "ModuleScript">
+export type ModuleChildren = Arbor.ChildrenOfClass<typeof(script), "ModuleScript">
 ```
 
 Returns a table shape for direct children whose analyzer-visible type matches the requested class.

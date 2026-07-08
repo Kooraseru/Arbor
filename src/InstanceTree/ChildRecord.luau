@@ -1,4 +1,4 @@
--- TypeManager/src/InstanceTree/ChildRecord.luau
+-- Arbor/src/InstanceTree/ChildRecord.luau
 --!strict
 
 --# Types

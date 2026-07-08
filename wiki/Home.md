@@ -1,6 +1,6 @@
-# TypeManager Wiki
+# Arbor Wiki
 
-TypeManager provides analyzer-facing type helpers for Luau/Roblox packages.
+Arbor provides analyzer-facing type helpers for Luau/Roblox packages.
 
 It exists for one reason:
 
@@ -21,12 +21,12 @@ Let package-owned dynamic module loading keep compile-time key surfaces.
 ## Quick Example
 
 ```luau
-local TypeManager = require(path.to.TypeManager)
+local Arbor = require(path.to.Arbor)
 
-local LoadModuleMap = TypeManager.RuntimeLoaders.LoadModuleMap
+local LoadModuleMap = Arbor.RuntimeLoaders.LoadModuleMap
 
-export type ActionId = TypeManager.ChildNames<typeof(script)>
-export type ActionMap = TypeManager.ChildRecord<typeof(script), ActionDefinition>
+export type ActionId = Arbor.ChildNames<typeof(script)>
+export type ActionMap = Arbor.ChildRecord<typeof(script), ActionDefinition>
 
 local actions: ActionMap = LoadModuleMap.From(script, validateAction)
 

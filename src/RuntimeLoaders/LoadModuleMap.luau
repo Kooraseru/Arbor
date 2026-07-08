@@ -1,4 +1,4 @@
--- TypeManager/src/RuntimeLoaders/LoadModuleMap.luau
+-- Arbor/src/RuntimeLoaders/LoadModuleMap.luau
 --!strict
 
 local LoadModuleMap = {}
@@ -34,7 +34,7 @@ function LoadModuleMap.From<T>(root: Instance, validate: ModuleValidator<T>): { 
 	for _, moduleScript in modules do
 		local ok, loaded = pcall(require, moduleScript)
 		if not ok then
-			error(string.format("[TypeManager.RuntimeLoaders.LoadModuleMap] failed to load %s: %s", moduleScript:GetFullName(), tostring(loaded)))
+			error(string.format("[Arbor.RuntimeLoaders.LoadModuleMap] failed to load %s: %s", moduleScript:GetFullName(), tostring(loaded)))
 		end
 
 		map[moduleScript.Name] = validate(loaded, moduleScript)

@@ -5,7 +5,7 @@ Runtime loaders are small helpers for package-owned child sets.
 ## LoadModuleMap
 
 ```luau
-local LoadModuleMap = TypeManager.RuntimeLoaders.LoadModuleMap
+local LoadModuleMap = Arbor.RuntimeLoaders.LoadModuleMap
 
 local modules = LoadModuleMap.From(script, validateModule)
 ```
@@ -44,8 +44,8 @@ local actions = LoadModuleMap.From(script, validateAction)
 Static surface:
 
 ```luau
-export type ActionId = TypeManager.ChildNames<typeof(script)>
-export type ActionMap = TypeManager.ChildRecord<typeof(script), ActionDefinition>
+export type ActionId = Arbor.ChildNames<typeof(script)>
+export type ActionMap = Arbor.ChildRecord<typeof(script), ActionDefinition>
 ```
 
 Both pieces matter. Runtime discovery alone is not a static public API.
