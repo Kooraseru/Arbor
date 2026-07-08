@@ -28,6 +28,14 @@ For repository CI, mirror these checks with paths relative to the package root.
 
 Stable package milestones are recorded in `CHANGELOG.md`, starting with `1.0.0`.
 
+Arbor versions use the slots:
+
+```txt
+[core release].[implementation].[bug-fix/patch]
+```
+
+Use the second slot for each implementation pass that adds package surface. Use the third slot for corrections, docs fixes, workflow fixes, and bug patches within that implementation.
+
 Every commit pushed to `main` or `master` creates a lightweight GitHub release tagged as `commit-<short-sha>`. That keeps commit snapshots available without pretending each commit is a new semver-stable milestone.
 
 ## Design Notes

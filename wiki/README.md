@@ -2,6 +2,8 @@
 
 These files are drafts for the standalone GitHub Wiki.
 
+Each `*.md` file in this folder becomes a wiki page, except this maintenance `README.md`.
+
 The repository workflow at `.github/workflows/sync-wiki.yml` publishes these pages to:
 
 ```txt

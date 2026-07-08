@@ -1,19 +1,16 @@
 <p align="center">
-  <a href="https://github.com/Kooraseru/Arbor/wiki"><img alt="Wiki" src="https://shieldcn.dev/badge/Wiki.svg?variant=ghost&logo=lu%3AFlower"></a>
+  <a href="https://github.com/Kooraseru/Arbor"><img alt="Stars + Forks + License" src="https://shieldcn.dev/group/github/stars/Kooraseru/Arbor+github/forks/Kooraseru/Arbor+github/license/Kooraseru/Arbor.svg?variant=ghost"></a>
+  <br>
+  <a href="https://github.com/Kooraseru/Arbor/wiki"><img alt="Wiki" src="https://shieldcn.dev/badge/Wiki-Docs.svg?variant=ghost&logo=ri%3AFaBook"></a>
   <a href="https://github.com/Kooraseru/Arbor/releases"><img alt="Releases" src="https://shieldcn.dev/github/Kooraseru/Arbor/release.svg?variant=ghost"></a>
   <a href="https://github.com/Kooraseru/Arbor/issues"><img alt="Issues" src="https://shieldcn.dev/github/Kooraseru/Arbor/issues.svg?variant=ghost&logo=ri%3APiWarning"></a>
   <br>
-  <a href="https://github.com/Kooraseru/Arbor"><img alt="Stars" src="https://shieldcn.dev/github/Kooraseru/Arbor/stars.svg?variant=ghost"></a>
-   <a href="https://github.com/Kooraseru/Arbor/releases"><img alt="Releases" src="https://shieldcn.dev/github/Kooraseru/Arbor/downloads.svg?variant=ghost"></a>
-  <a href="https://github.com/Kooraseru/Arbor/forks"><img alt="Forks" src="https://shieldcn.dev/github/Kooraseru/Arbor/forks.svg?variant=ghost"></a>
+  <a href="https://github.com/Kooraseru/Arbor/releases"><img alt="Downloads" src="https://shieldcn.dev/github/Kooraseru/Arbor/downloads.svg?variant=ghost"></a>
   <a href="https://github.com/Kooraseru/Arbor/graphs/contributors"><img alt="Contributors" src="https://shieldcn.dev/github/Kooraseru/Arbor/contributors.svg?variant=ghost"></a>
   <br>
-  <a href="CHANGELOG.md"><img alt="Changelog" src="https://shieldcn.dev/badge/Changelog.svg?variant=ghost&logo=ri%3APiTimer"></a>
-  <a href="LICENSE"><img alt="License" src="https://shieldcn.dev/github/Kooraseru/Arbor/license.svg?variant=ghost"></a>
+  <a href="CHANGELOG.md"><img alt="Changelog" src="https://shieldcn.dev/badge/Changelog.svg?variant=ghost&logo=ri%3AFaClock"></a>
   <img alt="Built In" src="https://shieldcn.dev/flag/kp.svg?variant=ghost">
 </p>
-
----
 
 <div align="center">
   <h1>Arbor</h1>
@@ -98,6 +95,7 @@ Root exported type aliases:
 
 ```txt
 Arbor.ChildNames<T>
+Arbor.ChildNamesOfClass<T, ClassName>
 Arbor.ChildRecord<T, V>
 Arbor.ChildOf<T, Name>
 Arbor.ChildrenOfClass<T, ClassName>
@@ -108,6 +106,7 @@ Root runtime facade:
 
 ```txt
 Arbor.InstanceTree.ChildNames
+Arbor.InstanceTree.ChildNamesOfClass
 Arbor.InstanceTree.ChildRecord
 Arbor.InstanceTree.ChildOf
 Arbor.InstanceTree.ChildrenOfClass
@@ -118,6 +117,7 @@ Focused modules:
 
 ```txt
 InstanceTree/ChildNames.Of<T>
+InstanceTree/ChildNamesOfClass.Of<T, ClassName>
 InstanceTree/ChildRecord.Of<T, V>
 InstanceTree/ChildOf.Of<T, Name>
 InstanceTree/ChildrenOfClass.Of<T, ClassName>
@@ -132,6 +132,7 @@ Longer guides live in the GitHub Wiki:
 - [Install](https://github.com/Kooraseru/Arbor/wiki/Install)
 - [Analyzer Model](https://github.com/Kooraseru/Arbor/wiki/Analyzer-Model)
 - [Type Functions](https://github.com/Kooraseru/Arbor/wiki/Type-Functions)
+- [Examples](https://github.com/Kooraseru/Arbor/wiki/Examples)
 - [Runtime Loaders](https://github.com/Kooraseru/Arbor/wiki/Runtime-Loaders)
 - [Package Boundaries](https://github.com/Kooraseru/Arbor/wiki/Package-Boundaries)
 - [Export And CI](https://github.com/Kooraseru/Arbor/wiki/Export-And-CI)
@@ -142,6 +143,8 @@ Longer guides live in the GitHub Wiki:
 `Arbor` is named after the Latin word for tree. The package is about owned instance-tree shape: direct child names, child records, child lookup, and small runtime loaders that preserve a typed boundary.
 
 `ChildNames<T>` returns a union of direct child names visible to the Luau analyzer.
+
+`ChildNamesOfClass<T, ClassName>` returns a union of direct child names whose analyzer-visible type matches the given class.
 
 `ChildRecord<T, V>` returns a table shape with direct child names as keys and `V` as the value type.
 
@@ -224,6 +227,7 @@ Arbor/
     init.luau
     InstanceTree/
       ChildNames.luau
+      ChildNamesOfClass.luau
       ChildRecord.luau
       ChildOf.luau
       ChildrenOfClass.luau

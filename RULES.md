@@ -62,4 +62,5 @@ It does not own runtime registries, boot sequencing, serialization, dispatch par
 - Put longer explanations in `wiki/*.md`.
 - Do not copy `wiki/README.md` to the GitHub wiki.
 - Update `CHANGELOG.md` for package milestones.
+- Use version slots as `[core release].[implementation].[bug-fix/patch]`.
 - Continuous releases may be generated for every commit, but stable version notes belong in the changelog.

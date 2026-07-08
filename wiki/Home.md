@@ -1,24 +1,29 @@
 # Arbor Wiki
 
-Arbor provides analyzer-facing type helpers for Luau/Roblox packages.
+Arbor provides analyzer-friendly helpers for describing owned Roblox instance surfaces.
 
-It exists for one reason:
-
-```txt
-Let package-owned dynamic module loading keep compile-time key surfaces.
-```
+Use it when a package owns a folder of children and wants the Luau analyzer to understand that static surface: child names, child lookup, class-filtered children, and validated module maps.
 
 ## Pages
 
 - [Install](Install)
 - [Analyzer Model](Analyzer-Model)
 - [Type Functions](Type-Functions)
+- [Examples](Examples)
 - [Runtime Loaders](Runtime-Loaders)
 - [Package Boundaries](Package-Boundaries)
 - [Export And CI](Export-And-CI)
 - [FAQ](FAQ)
 
 ## Quick Example
+
+Given this owned tree:
+
+```txt
+Actions
+  Kick.luau
+  Ban.luau
+```
 
 ```luau
 local Arbor = require(path.to.Arbor)
@@ -31,6 +36,12 @@ export type ActionMap = Arbor.ChildRecord<typeof(script), ActionDefinition>
 local actions: ActionMap = LoadModuleMap.From(script, validateAction)
 
 return actions
+```
+
+Expected type result:
+
+```luau
+type ActionId = "Kick" | "Ban"
 ```
 
 > [!IMPORTANT]

@@ -26,11 +26,13 @@ It helps package-owned runtime loaders expose typed lookup surfaces without hand
 Root facade:
 
 - `Arbor.ChildNames<T>`
+- `Arbor.ChildNamesOfClass<T, ClassName>`
 - `Arbor.ChildRecord<T, V>`
 - `Arbor.ChildOf<T, Name>`
 - `Arbor.ChildrenOfClass<T, ClassName>`
 - `Arbor.ModuleValidator<T>`
 - `Arbor.InstanceTree.ChildNames.Of<T>`
+- `Arbor.InstanceTree.ChildNamesOfClass.Of<T, ClassName>`
 - `Arbor.InstanceTree.ChildRecord.Of<T, V>`
 - `Arbor.InstanceTree.ChildOf.Of<T, Name>`
 - `Arbor.InstanceTree.ChildrenOfClass.Of<T, ClassName>`
@@ -39,6 +41,7 @@ Root facade:
 Focused modules remain public:
 
 - `InstanceTree/ChildNames.Of<T>`
+- `InstanceTree/ChildNamesOfClass.Of<T, ClassName>`
 - `InstanceTree/ChildRecord.Of<T, V>`
 - `InstanceTree/ChildOf.Of<T, Name>`
 - `InstanceTree/ChildrenOfClass.Of<T, ClassName>`

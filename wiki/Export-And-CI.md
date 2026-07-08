@@ -30,10 +30,13 @@ package extraction smoke test passes
 
 ## Release Policy
 
-Use `0.x` while analyzer and extraction behavior are still being confirmed.
+Use the package version slots:
 
-> [!WARNING]
-> Do not release `1.0.0` until Arbor behavior is proven in the target install and analyzer environments.
+```txt
+[core release].[implementation].[bug-fix/patch]
+```
+
+Core release `1` is the initial Arbor public package line. Increment the implementation slot when adding package surface. Increment the patch slot for fixes within that implementation.
 
 ## Wiki Publishing
 
