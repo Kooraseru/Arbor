@@ -1,7 +1,7 @@
 <p align="center">
   <a href="https://github.com/Kooraseru/Arbor"><img alt="Stars + Forks + License" src="https://shieldcn.dev/group/github/stars/Kooraseru/Arbor+github/forks/Kooraseru/Arbor+github/license/Kooraseru/Arbor.svg?variant=ghost"></a>
   <br>
-  <a href="https://github.com/Kooraseru/Arbor/wiki"><img alt="Wiki" src="https://shieldcn.dev/badge/Wiki-Docs.svg?variant=ghost&logo=ri%3AFaBook"></a>
+  <a href="https://kooraseru.github.io/Arbor/"><img alt="Docs" src="https://shieldcn.dev/badge/Docs.svg?variant=ghost&logo=ri%3AFaBook"></a>
   <a href="https://github.com/Kooraseru/Arbor/releases"><img alt="Releases" src="https://shieldcn.dev/github/Kooraseru/Arbor/release.svg?variant=ghost"></a>
   <a href="https://github.com/Kooraseru/Arbor/issues"><img alt="Issues" src="https://shieldcn.dev/github/Kooraseru/Arbor/issues.svg?variant=ghost&logo=ri%3APiWarning"></a>
   <br>
@@ -26,14 +26,13 @@
 - [Install](#install)
 - [Quick Start](#quick-start)
 - [Public API](#public-api)
-- [Wiki](#wiki)
+- [Docs](#docs)
 - [Concepts](#concepts)
 - [What This Proves](#what-this-proves)
 - [Runtime Loader Contract](#runtime-loader-contract)
 - [Analyzer Requirements](#analyzer-requirements)
 - [Package Boundaries](#package-boundaries)
 - [Repository Layout](#repository-layout)
-- [Release Blockers](#release-blockers)
 
 ## Status
 
@@ -124,19 +123,22 @@ InstanceTree/ChildrenOfClass.Of<T, ClassName>
 RuntimeLoaders/LoadModuleMap.From(root, validate)
 ```
 
-## Wiki
+## Docs
 
-Longer guides live in the GitHub Wiki:
+Longer guides live on the GitHub Pages docs site:
 
-- [Home](https://github.com/Kooraseru/Arbor/wiki)
-- [Install](https://github.com/Kooraseru/Arbor/wiki/Install)
-- [Analyzer Model](https://github.com/Kooraseru/Arbor/wiki/Analyzer-Model)
-- [Type Functions](https://github.com/Kooraseru/Arbor/wiki/Type-Functions)
-- [Examples](https://github.com/Kooraseru/Arbor/wiki/Examples)
-- [Runtime Loaders](https://github.com/Kooraseru/Arbor/wiki/Runtime-Loaders)
-- [Package Boundaries](https://github.com/Kooraseru/Arbor/wiki/Package-Boundaries)
-- [Export And CI](https://github.com/Kooraseru/Arbor/wiki/Export-And-CI)
-- [FAQ](https://github.com/Kooraseru/Arbor/wiki/FAQ)
+> [!NOTE]
+> The `docs/` folder is a Jekyll source folder. GitHub Pages builds it before publishing, so raw `_layouts/*.html` files are not meant to be opened directly.
+
+- [Home](https://kooraseru.github.io/Arbor/)
+- [Install](https://kooraseru.github.io/Arbor/install/)
+- [Analyzer Model](https://kooraseru.github.io/Arbor/analyzer-model/)
+- [Type Functions](https://kooraseru.github.io/Arbor/type-functions/)
+- [Examples](https://kooraseru.github.io/Arbor/examples/)
+- [Runtime Loaders](https://kooraseru.github.io/Arbor/runtime-loaders/)
+- [Package Boundaries](https://kooraseru.github.io/Arbor/package-boundaries/)
+- [Export And CI](https://kooraseru.github.io/Arbor/export-and-ci/)
+- [FAQ](https://kooraseru.github.io/Arbor/faq/)
 
 ## Concepts
 
@@ -221,7 +223,7 @@ descriptor identity
 ```txt
 Arbor/
   .github/
-  wiki/
+  docs/
   .gitignore
   src/
     init.luau

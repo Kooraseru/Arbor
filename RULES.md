@@ -19,7 +19,7 @@ It does not own runtime registries, boot sequencing, serialization, dispatch par
 ## Package Shape
 
 - Keep Luau source under `src/`.
-- Keep repository metadata, docs, workflows, and wiki drafts at the repository root.
+- Keep repository metadata, docs, and workflows at the repository root.
 - Keep `src/init.luau` as the root facade.
 - Keep focused helpers public under `src/InstanceTree/` and `src/RuntimeLoaders/`.
 - Do not add package dependencies unless Arbor cannot perform its core job without them.
@@ -59,8 +59,8 @@ It does not own runtime registries, boot sequencing, serialization, dispatch par
 ## Docs And Releases
 
 - Keep README focused on install, quick start, and public API.
-- Put longer explanations in `wiki/*.md`.
-- Do not copy `wiki/README.md` to the GitHub wiki.
+- Put longer explanations in `docs/*.md`.
+- Treat `docs/` as the canonical documentation site source.
 - Update `CHANGELOG.md` for package milestones.
 - Use version slots as `[core release].[implementation].[bug-fix/patch]`.
 - Continuous releases may be generated for every commit, but stable version notes belong in the changelog.

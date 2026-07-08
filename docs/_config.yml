@@ -1,0 +1,17 @@
+title: Arbor
+description: Analyzer-friendly static tree helpers for Luau and Roblox packages.
+baseurl: "/Arbor"
+url: "https://kooraseru.github.io"
+
+markdown: kramdown
+highlighter: rouge
+permalink: pretty
+
+exclude:
+  - README.md
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

@@ -1,3 +1,7 @@
+---
+title: Type Functions
+---
+
 # Type Functions
 
 ## ChildNames
@@ -49,7 +53,7 @@ type Map = {
 }
 ```
 
-Returns a table shape whose keys are direct child names and whose values are the provided type. It proves keys, not ModuleScript return types.
+Returns a table shape whose keys are direct child names and whose values are the provided type.
 
 ## ChildOf
 
@@ -86,5 +90,3 @@ type ModuleChildren = {
 
 Returns a table shape for direct children whose analyzer-visible type matches the requested class.
 
-> [!TIP]
-> Use root exported aliases for package-facing APIs. Use focused `.Of<T>` modules if you want the leaf helper name visible in local code.

@@ -1,6 +1,8 @@
-# Install
+---
+title: Install
+---
 
-## Install Shape
+# Install
 
 Place `Arbor` wherever your project or package manager exposes required modules.
 
@@ -12,7 +14,7 @@ local Arbor = require(path.to.Arbor)
 
 Arbor does not require peer packages. The only install requirement is that the Luau analyzer can see the module surface you require.
 
-## Focused Module Requires
+## Focused Modules
 
 Root facade:
 
@@ -27,3 +29,4 @@ local ChildNames = require(path.to.Arbor.InstanceTree.ChildNames)
 ```
 
 Use whichever is clearer for the caller.
+

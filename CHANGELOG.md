@@ -13,16 +13,22 @@ Version slots mean:
 ### Summary
 
 ```diff
-+ Added examples-focused documentation for Arbor type helpers.
-- Removed slogan-style wiki Home wording.
++ Added GitHub Pages docs setup and examples-focused documentation.
+- Removed GitHub Wiki as the canonical documentation source.
 ```
 
 ### Documentation
 
-- Added `wiki/Examples.md` with owned-tree examples, calls, expected analyzer-facing results, and runtime notes.
-- Expanded `wiki/Type-Functions.md` into a call/result reference format.
-- Updated wiki Home copy to describe Arbor's practical use without the old "exists for one reason" phrasing.
-- Linked the Examples page from README and wiki Home.
+- Added `docs/` as the canonical Jekyll/GitHub Pages documentation source.
+- Added examples with owned-tree examples, calls, expected analyzer-facing results, and runtime notes.
+- Expanded type-function docs into a call/result reference format.
+- Updated docs Home copy to describe Arbor's practical use without the old "exists for one reason" phrasing.
+- Linked README docs entries to the GitHub Pages URL.
+
+### Repository
+
+- Added `.github/workflows/pages.yml` to build and deploy `docs/` through GitHub Pages.
+- Removed the old GitHub Wiki sync workflow and `wiki/` drafts.
 
 ## 1.1.0 - 2026-07-08
 
@@ -40,7 +46,7 @@ Version slots mean:
 
 ### Documentation
 
-- Added `ChildNamesOfClass` to README, package metadata, and wiki type-function docs.
+- Added `ChildNamesOfClass` to README, package metadata, and docs type-function pages.
 - Updated the local roadmap to mark the first Lane 1 helper as implemented.
 
 ## 1.0.0 - 2026-07-08
@@ -71,14 +77,14 @@ Version slots mean:
 
 ### Documentation
 
-- Added README, package metadata, contribution notes, and wiki drafts.
+- Added README, package metadata, contribution notes, and docs drafts.
 - Documented analyzer limits around typed child-name discovery.
 - Documented that child-name discovery proves names and instance-tree shape, not ModuleScript return types.
 
 ### Repository
 
 - Added Apache-2.0 license text.
-- Added GitHub issue templates, pull request template, funding metadata, CI, wiki sync, and per-commit release automation.
+- Added GitHub issue templates, pull request template, funding metadata, CI, and per-commit release automation.
 - Moved runtime/analyzer-facing Luau source under `src/`.
 
 ### Removed

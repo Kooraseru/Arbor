@@ -1,9 +1,13 @@
+---
+title: Package Boundaries
+---
+
 # Package Boundaries
 
 Arbor answers:
 
 ```txt
-What does the compiler/analyzer know?
+What static structure does the Luau analyzer know about an owned instance surface?
 ```
 
 It does not answer:
@@ -39,5 +43,5 @@ descriptor identity
 external package lookup
 ```
 
-> [!NOTE]
-> `RuntimeLoaders` is allowed because it is a tiny helper that pairs dynamic loading with validation. It should not grow into a registry or lifecycle package.
+`RuntimeLoaders` is allowed because it is a tiny helper that pairs dynamic loading with validation. It should not grow into a registry or lifecycle package.
+
