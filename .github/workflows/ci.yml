@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  package-shape:
+    name: Package shape
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required files
+        shell: bash
+        run: |
+          test -f README.md
+          test -f CHANGELOG.md
+          test -f CONTRIBUTING.md
+          test -f LICENSE
+          test -f NOTICE
+          test -f init.luau
+          test -d InstanceTree
+          test -d RuntimeLoaders
+
+      - name: Reject game-rooted requires
+        shell: bash
+        run: |
+          if grep -R --line-number --include='*.luau' --include='*.lua' -E '@game|@Shared|@Client|@Server' .; then
+            echo "Found game-rooted require alias in package source."
+            exit 1
+          fi
+
+      - name: Reject high-risk casts
+        shell: bash
+        run: |
+          if grep -R --line-number --include='*.luau' --include='*.lua' -E '::[[:space:]]*any|require\\(.+\\)[[:space:]]*::[[:space:]]*any' .; then
+            echo "Found high-risk any cast."
+            exit 1
+          fi
+
+  luau-analysis:
+    name: Luau analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Placeholder
+        shell: bash
+        run: |
+          echo "Wire this job to the chosen Luau analyzer/tool installer during export."
+          echo "Do not publish until this job runs real analysis."

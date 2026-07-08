@@ -1,0 +1,46 @@
+# Export And CI
+
+## Standalone Repository Shape
+
+Recommended simple layout:
+
+```txt
+TypeManager/
+  init.luau
+  InstanceTree/
+  RuntimeLoaders/
+  README.md
+  CHANGELOG.md
+  CONTRIBUTING.md
+  LICENSE
+  NOTICE
+```
+
+## CI Checks
+
+CI should verify:
+
+```txt
+Luau analysis passes
+no game-rooted require aliases
+no high-risk `any` casts
+README examples are still plausible
+package extraction smoke test passes
+```
+
+## Release Policy
+
+Use `0.x` while analyzer and extraction behavior are still being confirmed.
+
+> [!WARNING]
+> Do not release `1.0.0` until TypeManager behavior is proven in the target install and analyzer environments.
+
+## Wiki Publishing
+
+GitHub stores wiki pages in a separate repository:
+
+```txt
+Kooraseru/TypeManager.wiki.git
+```
+
+Push these markdown pages there during export.
