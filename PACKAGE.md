@@ -3,7 +3,7 @@
 Status: export-prep
 Class: compile-time helper package
 Public-ready: no
-Entrypoint: init.luau
+Entrypoint: src/init.luau
 Runtime: Luau type functions, optional runtime loader helpers
 Roblox services: none
 
@@ -44,7 +44,7 @@ Focused modules remain public:
 
 ## Extraction Notes
 
-- Copy this folder as `TypeManager`.
+- Copy this repository as `TypeManager`.
 - Require the root facade when it reduces repeated require surface.
 - Prefer root exported type aliases for package-facing type surfaces.
 - Require focused modules directly when you need the leaf module's original `.Of` type-function namespace.

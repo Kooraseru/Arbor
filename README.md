@@ -1,10 +1,14 @@
-# TypeManager
-
-Analyzer-facing type helpers for Luau/Roblox package surfaces.
-
-TypeManager helps modular packages keep dynamic runtime loading without giving up compile-time key checks. It is meant for owned child trees: folders where the package owns the children, discovers them at runtime, and wants the analyzer to know the child names.
+<div align="center">
+  <h1>TypeManager</h1>
+  <p>Analyzer-facing type helpers for Luau/Roblox package surfaces.</p>
+  <p>
+    TypeManager helps modular packages keep dynamic runtime loading without giving up compile-time key checks.
+    It is meant for owned child trees: folders where the package owns the children, discovers them at runtime, and wants the analyzer to know the child names.
+  </p>
+</div>
 
 <p align="center">
+  <br>
   <a href="https://github.com/Kooraseru/TypeManager/wiki"><img alt="Wiki" src="https://shieldcn.dev/badge/Wiki.svg?variant=ghost&logo=lu%3AFlower"></a>
   <a href="https://github.com/Kooraseru/TypeManager/releases"><img alt="Release" src="https://shieldcn.dev/github/Kooraseru/TypeManager/release.svg?variant=ghost"></a>
   <a href="https://github.com/Kooraseru/TypeManager/issues"><img alt="Issues" src="https://shieldcn.dev/github/Kooraseru/TypeManager/issues.svg?variant=ghost"></a>
@@ -24,6 +28,7 @@ TypeManager helps modular packages keep dynamic runtime loading without giving u
 - [Install](#install)
 - [Quick Start](#quick-start)
 - [Public API](#public-api)
+- [Wiki](#wiki)
 - [Concepts](#concepts)
 - [What This Proves](#what-this-proves)
 - [Runtime Loader Contract](#runtime-loader-contract)
@@ -34,25 +39,19 @@ TypeManager helps modular packages keep dynamic runtime loading without giving u
 
 ## Status
 
-Experimental package. The current implementation is being prepared for standalone export.
+Experimental package. The current implementation is published for early package testing.
 
 > [!WARNING]
-> Do not treat this package as public-stable until analyzer parity, CI, and export layout are confirmed.
+> Do not treat this package as public-stable until analyzer parity and CI are confirmed.
 
 ## Install
 
-Copy the `TypeManager` folder into your package area:
+Place `TypeManager` wherever your project or package manager exposes required modules.
 
-```txt
-ReplicatedStorage
-  Packages
-    TypeManager
-```
-
-Then require the package root:
+Require the package root through whatever module reference your environment provides:
 
 ```luau
-local TypeManager = require(path.To.TypeManager)
+local TypeManager = require(path.to.TypeManager)
 ```
 
 When used inside a standalone package, internal TypeManager requires use `@self` and focused child modules.
@@ -65,7 +64,7 @@ When used inside a standalone package, internal TypeManager requires use `@self`
 Use the root facade when you want fewer require lines:
 
 ```luau
-local TypeManager = require("../TypeManager")
+local TypeManager = require(path.to.TypeManager)
 
 local LoadModuleMap = TypeManager.RuntimeLoaders.LoadModuleMap
 
@@ -80,9 +79,9 @@ return actions
 Use focused modules when you want the simplest analyzer path:
 
 ```luau
-local ChildNames = require("../TypeManager/InstanceTree/ChildNames")
-local ChildRecord = require("../TypeManager/InstanceTree/ChildRecord")
-local LoadModuleMap = require("../TypeManager/RuntimeLoaders/LoadModuleMap")
+local ChildNames = require(path.to.TypeManager.InstanceTree.ChildNames)
+local ChildRecord = require(path.to.TypeManager.InstanceTree.ChildRecord)
+local LoadModuleMap = require(path.to.TypeManager.RuntimeLoaders.LoadModuleMap)
 
 export type ActionId = ChildNames.Of<typeof(script)>
 export type ActionMap = ChildRecord.Of<typeof(script), ActionDefinition>
@@ -123,6 +122,19 @@ InstanceTree/ChildOf.Of<T, Name>
 InstanceTree/ChildrenOfClass.Of<T, ClassName>
 RuntimeLoaders/LoadModuleMap.From(root, validate)
 ```
+
+## Wiki
+
+Longer guides live in the GitHub Wiki:
+
+- [Home](https://github.com/Kooraseru/TypeManager/wiki)
+- [Install](https://github.com/Kooraseru/TypeManager/wiki/Install)
+- [Analyzer Model](https://github.com/Kooraseru/TypeManager/wiki/Analyzer-Model)
+- [Type Functions](https://github.com/Kooraseru/TypeManager/wiki/Type-Functions)
+- [Runtime Loaders](https://github.com/Kooraseru/TypeManager/wiki/Runtime-Loaders)
+- [Package Boundaries](https://github.com/Kooraseru/TypeManager/wiki/Package-Boundaries)
+- [Export And CI](https://github.com/Kooraseru/TypeManager/wiki/Export-And-CI)
+- [FAQ](https://github.com/Kooraseru/TypeManager/wiki/FAQ)
 
 ## Concepts
 
@@ -202,25 +214,29 @@ descriptor identity
 
 ```txt
 TypeManager/
-  init.luau
-  InstanceTree/
-    ChildNames.luau
-    ChildRecord.luau
-    ChildOf.luau
-    ChildrenOfClass.luau
-  RuntimeLoaders/
-    LoadModuleMap.luau
+  .github/
+  wiki/
+  .gitignore
+  src/
+    init.luau
+    InstanceTree/
+      ChildNames.luau
+      ChildRecord.luau
+      ChildOf.luau
+      ChildrenOfClass.luau
+    RuntimeLoaders/
+      LoadModuleMap.luau
   PACKAGE.md
+  Badges.md
   README.md
   CHANGELOG.md
   CONTRIBUTING.md
   LICENSE
-  NOTICE
 ```
 
 ## License
 
-Apache License 2.0. See `LICENSE` and `NOTICE`.
+Apache License 2.0. See [LICENSE](LICENSE).
 
 ## Release Blockers
 
@@ -228,9 +244,9 @@ Before a public release:
 
 ```txt
 confirm extraction analyzer behavior
-add CI that runs Luau analysis and architecture/rule checks
+replace placeholder CI with real Luau analysis
 document the supported install layout
 decide package manager metadata target, if any
 ```
 
-See `EXPORT.md` for the repository setup checklist.
+See [EXPORT.md](EXPORT.md) for the repository setup checklist.

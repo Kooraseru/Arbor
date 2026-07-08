@@ -21,7 +21,7 @@ Let package-owned dynamic module loading keep compile-time key surfaces.
 ## Quick Example
 
 ```luau
-local TypeManager = require("../TypeManager")
+local TypeManager = require(path.to.TypeManager)
 
 local LoadModuleMap = TypeManager.RuntimeLoaders.LoadModuleMap
 

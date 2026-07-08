@@ -6,14 +6,14 @@ Recommended simple layout:
 
 ```txt
 TypeManager/
-  init.luau
-  InstanceTree/
-  RuntimeLoaders/
+  src/
+    init.luau
+    InstanceTree/
+    RuntimeLoaders/
   README.md
   CHANGELOG.md
   CONTRIBUTING.md
   LICENSE
-  NOTICE
 ```
 
 ## CI Checks
@@ -43,4 +43,13 @@ GitHub stores wiki pages in a separate repository:
 Kooraseru/TypeManager.wiki.git
 ```
 
-Push these markdown pages there during export.
+The package includes `.github/workflows/sync-wiki.yml` to publish package-local `wiki/*.md` pages there.
+
+The workflow:
+
+```txt
+runs on wiki changes pushed to main
+can be run manually from GitHub Actions
+skips wiki/README.md
+pushes only when generated wiki contents changed
+```

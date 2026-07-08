@@ -7,7 +7,7 @@ This file tracks what the standalone GitHub repository should contain when TypeM
 
 ## Repository Shape
 
-Recommended first repository layout:
+Current repository layout:
 
 ```txt
 TypeManager/
@@ -20,35 +20,20 @@ TypeManager/
     PULL_REQUEST_TEMPLATE.md
     FUNDING.yml
   src/
-    TypeManager/
-      init.luau
-      InstanceTree/
-      RuntimeLoaders/
+    init.luau
+    InstanceTree/
+    RuntimeLoaders/
+  .gitignore
+  Badges.md
   README.md
   CHANGELOG.md
   CONTRIBUTING.md
   LICENSE
-  NOTICE
-  wiki/
-```
-
-If the repo root is the package root instead:
-
-```txt
-TypeManager/
-  init.luau
-  InstanceTree/
-  RuntimeLoaders/
-  README.md
-  CHANGELOG.md
-  CONTRIBUTING.md
-  LICENSE
-  NOTICE
   wiki/
 ```
 
 > [!TIP]
-> Start with the package root at repo root unless the chosen package manager expects `src/TypeManager`. Fewer path layers makes analyzer experiments less annoying.
+> Repository metadata lives at the root. Runtime/analyzer-facing Luau source lives under `src/`.
 
 ## GitHub Metadata
 
@@ -84,6 +69,12 @@ Prepare the standalone repository wiki from:
 
 ```txt
 wiki/
+```
+
+Live wiki:
+
+```txt
+https://github.com/Kooraseru/TypeManager/wiki
 ```
 
 Suggested wiki pages:
@@ -136,12 +127,12 @@ run analyzer on copied package
 verify root facade require works
 verify focused module require works
 verify ChildNames/ChildRecord examples compile
-verify no @game/@Shared/@Client/@Server require paths exist
+verify no rooted game-specific require paths exist
 ```
 
 ## GitHub Templates
 
-Export `.github/` from the TypeManager package root into the standalone repository root.
+`.github/` is already package-local and should live at the standalone repository root.
 
 Issue templates should ask for:
 
@@ -170,5 +161,5 @@ docs updated
 external analyzer parity tested
 package extraction smoke test passing
 README quick start validated outside the development workspace
-CI workflow runnable in standalone repo
+CI workflow runs real Luau analysis instead of the placeholder job
 ```

@@ -25,3 +25,7 @@ coverage/
 
 # Logs
 *.log
+
+# Testing/other
+Badges.md
+EXPORT.md

@@ -2,11 +2,19 @@
 
 These files are drafts for the standalone GitHub Wiki.
 
-To publish after the TypeManager repository exists:
+The repository workflow at `.github/workflows/sync-wiki.yml` publishes these pages to:
+
+```txt
+https://github.com/Kooraseru/TypeManager.wiki.git
+```
+
+It runs when `wiki/**` changes on `main`, and it can also be run manually from GitHub Actions.
+
+Manual fallback:
 
 ```bash
 git clone git@github.com:Kooraseru/TypeManager.wiki.git
-cp path/to/TypeManager/wiki/*.md TypeManager.wiki/
+cp wiki/*.md TypeManager.wiki/
 cd TypeManager.wiki
 git add .
 git commit -m "Add TypeManager wiki"

@@ -1,4 +1,4 @@
--- TypeManager/init.luau
+-- TypeManager/src/init.luau
 --!strict
 
 --# Modules

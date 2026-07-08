@@ -1,4 +1,4 @@
--- TypeManager/InstanceTree/ChildrenOfClass.luau
+-- TypeManager/src/InstanceTree/ChildrenOfClass.luau
 --!strict
 
 --# Types

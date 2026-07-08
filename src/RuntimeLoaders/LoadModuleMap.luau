@@ -1,4 +1,4 @@
--- TypeManager/RuntimeLoaders/LoadModuleMap.luau
+-- TypeManager/src/RuntimeLoaders/LoadModuleMap.luau
 --!strict
 
 local LoadModuleMap = {}

@@ -21,15 +21,14 @@ jobs:
           test -f CHANGELOG.md
           test -f CONTRIBUTING.md
           test -f LICENSE
-          test -f NOTICE
-          test -f init.luau
-          test -d InstanceTree
-          test -d RuntimeLoaders
+          test -f src/init.luau
+          test -d src/InstanceTree
+          test -d src/RuntimeLoaders
 
       - name: Reject game-rooted requires
         shell: bash
         run: |
-          if grep -R --line-number --include='*.luau' --include='*.lua' -E '@game|@Shared|@Client|@Server' .; then
+          if grep -R --line-number --include='*.luau' --include='*.lua' -E '@game|@Shared|@Client|@Server' src; then
             echo "Found game-rooted require alias in package source."
             exit 1
           fi
@@ -37,7 +36,7 @@ jobs:
       - name: Reject high-risk casts
         shell: bash
         run: |
-          if grep -R --line-number --include='*.luau' --include='*.lua' -E '::[[:space:]]*any|require\\(.+\\)[[:space:]]*::[[:space:]]*any' .; then
+          if grep -R --line-number --include='*.luau' --include='*.lua' -E '::[[:space:]]*any|require\\(.+\\)[[:space:]]*::[[:space:]]*any' src; then
             echo "Found high-risk any cast."
             exit 1
           fi

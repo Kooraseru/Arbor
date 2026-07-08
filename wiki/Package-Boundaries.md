@@ -36,7 +36,7 @@ pipeline execution
 serialization tags
 dispatch parsing
 descriptor identity
-package dependency resolution
+external package lookup
 ```
 
 > [!NOTE]

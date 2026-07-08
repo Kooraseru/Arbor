@@ -18,11 +18,11 @@ TypeManager is intentionally small. Changes should preserve the split between co
 Run focused validation before proposing a change:
 
 ```powershell
-wsl fish .luau-lsp/analyze.fish src/ReplicatedStorage/Shared/Packages/TypeManager/init.luau src/ReplicatedStorage/Shared/Packages/TypeManager/InstanceTree/ChildNames.luau src/ReplicatedStorage/Shared/Packages/TypeManager/InstanceTree/ChildRecord.luau src/ReplicatedStorage/Shared/Packages/TypeManager/InstanceTree/ChildOf.luau src/ReplicatedStorage/Shared/Packages/TypeManager/InstanceTree/ChildrenOfClass.luau src/ReplicatedStorage/Shared/Packages/TypeManager/RuntimeLoaders/LoadModuleMap.luau
-powershell -ExecutionPolicy Bypass -File tools/rules/run-architecture-validator.ps1 -Root src/ReplicatedStorage/Shared/Packages/TypeManager
+wsl fish .luau-lsp/analyze.fish src/init.luau src/InstanceTree/ChildNames.luau src/InstanceTree/ChildRecord.luau src/InstanceTree/ChildOf.luau src/InstanceTree/ChildrenOfClass.luau src/RuntimeLoaders/LoadModuleMap.luau
+powershell -ExecutionPolicy Bypass -File tools/rules/run-architecture-validator.ps1 -Root .
 ```
 
-For exported repository CI, mirror these checks with paths relative to the exported package root.
+For repository CI, mirror these checks with paths relative to the package root.
 
 ## Design Notes
 
