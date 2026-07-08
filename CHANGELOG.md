@@ -30,7 +30,7 @@ Version slots mean:
 
 - Added `.github/workflows/pages.yml` to build and deploy `docs/` through GitHub Pages.
 - Updated workflow checkout steps to `actions/checkout@v5`.
-- Updated Pages configuration to `actions/configure-pages@v6` with Pages enablement.
+- Updated Pages configuration to `actions/configure-pages@v6`.
 - Removed the old GitHub Wiki sync workflow and `wiki/` drafts.
 
 ## 1.1.0 - 2026-07-08
