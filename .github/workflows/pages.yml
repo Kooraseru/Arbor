@@ -41,8 +41,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.x"
-          cache: pip
+          python-version: "3.12"
 
       - name: Install docs dependencies
         shell: bash
