@@ -27,15 +27,43 @@ theme:
     repo: fontawesome/brands/github
 
 nav:
-  - Overview: index.md
-  - Install: install.md
-  - Analyzer Model: analyzer-model.md
-  - Type Functions: type-functions.md
-  - Examples: examples.md
-  - Runtime Loaders: runtime-loaders.md
-  - Package Boundaries: package-boundaries.md
-  - Export And CI: export-and-ci.md
-  - FAQ: faq.md
+  - Introduction:
+      - Overview: index.md
+      - Why Arbor?: introduction/why-arbor.md
+      - Installation: install.md
+      - Quick Start: introduction/quick-start.md
+  - Core Concepts:
+      - Analyzer Model: analyzer-model.md
+      - Package Boundaries: package-boundaries.md
+      - Runtime Loading: runtime-loaders.md
+      - Design Goals: core-concepts/design-goals.md
+  - API Reference:
+      - InstanceTree:
+          - Overview: api/instance-tree/index.md
+          - ChildNames: api/instance-tree/child-names.md
+          - ChildOf: api/instance-tree/child-of.md
+          - ChildRecord: api/instance-tree/child-record.md
+          - ChildrenOfClass: api/instance-tree/children-of-class.md
+          - ChildNamesOfClass: api/instance-tree/child-names-of-class.md
+      - RuntimeLoaders:
+          - Overview: api/runtime-loaders/index.md
+          - LoadModuleMap: api/runtime-loaders/load-module-map.md
+  - Guides:
+      - Creating a Package: guides/creating-a-package.md
+      - Exporting Packages: guides/exporting-packages.md
+      - CI Integration: export-and-ci.md
+      - Typechecking: guides/typechecking.md
+      - Best Practices: guides/best-practices.md
+  - Examples:
+      - Overview: examples.md
+      - Direct Children: examples/direct-children.md
+      - Class Filtering: examples/class-filtering.md
+      - Runtime Validation: examples/runtime-validation.md
+      - Package Extraction: examples/package-extraction.md
+  - Reference:
+      - FAQ: faq.md
+      - Roadmap: reference/roadmap.md
+      - Changelog: reference/changelog.md
 
 markdown_extensions:
   - admonition

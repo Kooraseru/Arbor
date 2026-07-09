@@ -15,7 +15,7 @@ Arbor is named after the Latin word for tree. It exposes the static structure of
 
 - [Install](install.md)
 - [Examples](examples.md)
-- [Type Functions](type-functions.md)
+- [API Reference](api/instance-tree/index.md)
 - [Runtime Loaders](runtime-loaders.md)
 
 ## What Arbor Proves

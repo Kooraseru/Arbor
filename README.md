@@ -133,7 +133,7 @@ Longer guides live on the GitHub Pages docs site:
 - [Home](https://kooraseru.github.io/Arbor/)
 - [Install](https://kooraseru.github.io/Arbor/install/)
 - [Analyzer Model](https://kooraseru.github.io/Arbor/analyzer-model/)
-- [Type Functions](https://kooraseru.github.io/Arbor/type-functions/)
+- [InstanceTree API](https://kooraseru.github.io/Arbor/api/instance-tree/)
 - [Examples](https://kooraseru.github.io/Arbor/examples/)
 - [Runtime Loaders](https://kooraseru.github.io/Arbor/runtime-loaders/)
 - [Package Boundaries](https://kooraseru.github.io/Arbor/package-boundaries/)
