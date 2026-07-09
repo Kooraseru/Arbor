@@ -4,91 +4,105 @@ title: Examples
 
 # Examples
 
-These examples show the owned tree, the call, the expected analyzer-facing result, and the caveat.
+These examples are packaged as repo files under `examples/` so the docs can show the same scripts that the analyzer checks.
 
-## Direct Child Names
+## Direct Children
 
-Owned tree:
+This example proves the names and child table shape of direct ModuleScript children.
+
+Tree:
 
 ```txt
-Actions
+direct-children
+  init.luau
   Kick.luau
   Ban.luau
 ```
 
-Call:
+`init.luau`:
 
 ```luau
-export type ActionId = Arbor.ChildNames<typeof(script)>
+--8<-- "examples/direct-children/init.luau"
 ```
 
-Expected result:
+`Kick.luau`:
 
 ```luau
-type ActionId = "Kick" | "Ban"
+--8<-- "examples/direct-children/Kick.luau"
 ```
 
-## Class-Filtered Child Names
+`Ban.luau`:
 
-Owned tree:
+```luau
+--8<-- "examples/direct-children/Ban.luau"
+```
+
+## Class-Filtered Children
+
+This example proves the child table shape after filtering direct children by Roblox class.
+
+Tree:
 
 ```txt
-Actions
-  Kick.luau
-  Ban.luau
-  Metadata
-```
-
-Call:
-
-```luau
-export type ActionModuleId = Arbor.ChildNamesOfClass<typeof(script), "ModuleScript">
-```
-
-Expected result:
-
-```luau
-type ActionModuleId = "Kick" | "Ban"
-```
-
-`Metadata` is not included because it is not analyzer-visible as a `ModuleScript`.
-
-## Validated Module Map
-
-Owned tree:
-
-```txt
-Actions
+class-filtered-children
+  init.luau
   Kick.luau
   Ban.luau
 ```
 
-Call:
+`init.luau`:
 
 ```luau
-local LoadModuleMap = Arbor.RuntimeLoaders.LoadModuleMap
-
-export type ActionId = Arbor.ChildNames<typeof(script)>
-export type ActionMap = Arbor.ChildRecord<typeof(script), ActionDefinition>
-
-local actions: ActionMap = LoadModuleMap.From(script, validateAction)
+--8<-- "examples/class-filtered-children/init.luau"
 ```
 
-Expected result:
+`Kick.luau`:
 
 ```luau
-type ActionId = "Kick" | "Ban"
-type ActionMap = {
-  Kick: ActionDefinition,
-  Ban: ActionDefinition,
-}
+--8<-- "examples/class-filtered-children/Kick.luau"
 ```
 
-Runtime behavior:
+`Ban.luau`:
+
+```luau
+--8<-- "examples/class-filtered-children/Ban.luau"
+```
+
+## Runtime Loader
+
+This example keeps the compile-time tree shape separate from runtime module validation.
+
+Tree:
 
 ```txt
-requires direct ModuleScript children
-passes each required value into validateAction
-returns a map keyed by ModuleScript name
+runtime-loader
+  init.luau
+  Kick.luau
+  Ban.luau
 ```
 
+`init.luau`:
+
+```luau
+--8<-- "examples/runtime-loader/init.luau"
+```
+
+`Kick.luau`:
+
+```luau
+--8<-- "examples/runtime-loader/Kick.luau"
+```
+
+`Ban.luau`:
+
+```luau
+--8<-- "examples/runtime-loader/Ban.luau"
+```
+
+## Extracted Package
+
+The extracted package example records the workspace shape used when Arbor is consumed from `ReplicatedStorage.Shared.Packages.Arbor`.
+
+```md
+--8<-- "examples/extracted-package/README.md"
+```

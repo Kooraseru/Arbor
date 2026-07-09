@@ -13,10 +13,10 @@ Arbor is named after the Latin word for tree. It exposes the static structure of
 
 ## Start Here
 
-- [Install](install/)
-- [Examples](examples/)
-- [Type Functions](type-functions/)
-- [Runtime Loaders](runtime-loaders/)
+- [Install](install.md)
+- [Examples](examples.md)
+- [Type Functions](type-functions.md)
+- [Runtime Loaders](runtime-loaders.md)
 
 ## What Arbor Proves
 
@@ -34,4 +34,3 @@ It does not prove ModuleScript return types. Runtime-loaded values still need va
 ## Package Boundary
 
 Arbor does not own registries, lifecycle, serialization, dispatch, descriptors, pipeline ordering, or package lookup.
-
