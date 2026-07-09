@@ -128,7 +128,7 @@ RuntimeLoaders/LoadModuleMap.From(root, validate)
 Longer guides live on the GitHub Pages docs site:
 
 > [!NOTE]
-> The `docs/` folder is a Jekyll source folder. GitHub Pages builds it before publishing, so raw `_layouts/*.html` files are not meant to be opened directly.
+> The `docs/` folder is an MkDocs Material source folder. GitHub Pages builds it before publishing, and branch previews are published under `/canary/` and `/ci/`.
 
 - [Home](https://kooraseru.github.io/Arbor/)
 - [Install](https://kooraseru.github.io/Arbor/install/)

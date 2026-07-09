@@ -51,7 +51,29 @@ Core release `1` is the initial Arbor public package line. Increment the impleme
 
 ## Pages
 
-The GitHub Pages site is built from `docs/`.
+The GitHub Pages site is built from `docs/` with MkDocs Material.
+
+Run the local Pages workflow shape before pushing docs workflow changes:
+
+=== "Windows PowerShell"
+
+    ```powershell
+    bash .github/scripts/test-pages-workflow.sh
+    ```
+
+=== "Linux Bash"
+
+    ```bash
+    bash .github/scripts/test-pages-workflow.sh
+    ```
+
+=== "macOS Bash/Zsh"
+
+    ```bash
+    bash .github/scripts/test-pages-workflow.sh
+    ```
+
+The local check stages branch inputs under `.tmp/pages-workflow-test/workspace` and writes the simulated Pages artifact under `.tmp/pages-workflow-test/result`.
 
 The Pages workflow deploys through the `github-pages` environment. If GitHub rejects a deployment with an environment protection message, update the repository environment rules:
 

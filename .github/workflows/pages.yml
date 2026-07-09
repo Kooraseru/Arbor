@@ -53,8 +53,8 @@ jobs:
         if: hashFiles('main/mkdocs.yml') != ''
         shell: bash
         run: |
-          mkdir -p _site
-          mkdocs build --config-file main/mkdocs.yml --site-dir _site
+          mkdir -p "$GITHUB_WORKSPACE/_site"
+          mkdocs build --config-file main/mkdocs.yml --site-dir "$GITHUB_WORKSPACE/_site"
 
       - name: Checkout canary branch
         uses: actions/checkout@v5
@@ -80,7 +80,7 @@ jobs:
         if: hashFiles('canary/mkdocs.yml') != ''
         shell: bash
         run: |
-          mkdocs build --config-file canary/mkdocs.yml --site-dir _site/canary
+          mkdocs build --config-file canary/mkdocs.yml --site-dir "$GITHUB_WORKSPACE/_site/canary"
 
       - name: Checkout ci branch
         uses: actions/checkout@v5
@@ -106,7 +106,7 @@ jobs:
         if: hashFiles('ci/mkdocs.yml') != ''
         shell: bash
         run: |
-          mkdocs build --config-file ci/mkdocs.yml --site-dir _site/ci
+          mkdocs build --config-file ci/mkdocs.yml --site-dir "$GITHUB_WORKSPACE/_site/ci"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
