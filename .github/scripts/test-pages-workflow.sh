@@ -128,7 +128,10 @@ for branch in "${branches[@]}"; do
 	fi
 
 	echo "Building $branch docs -> $branch_site_path"
-	"$python_cmd" -m mkdocs build --config-file "$(python_path "$config_path")" --site-dir "$(python_path "$branch_site_path")"
+	(
+		cd "$branch_path"
+		"$python_cmd" -m mkdocs build --config-file mkdocs.yml --site-dir "$(python_path "$branch_site_path")"
+	)
 done
 
 if [ ! -d "$site_path" ]; then
@@ -136,9 +139,20 @@ if [ ! -d "$site_path" ]; then
 	exit 1
 fi
 
-if ! find "$site_path" -name index.html -type f | grep -q .; then
+if [ -z "$(find "$site_path" -name index.html -type f -print -quit)" ]; then
 	echo "Pages artifact directory contains no index.html files: $site_path" >&2
 	exit 1
 fi
+
+for rendered_example in \
+	"$site_path/examples/direct-children/index.html" \
+	"$site_path/canary/examples/direct-children/index.html" \
+	"$site_path/ci/examples/direct-children/index.html"
+do
+	if [ -f "$rendered_example" ] && ! grep -q "Arbor/examples/direct-children/init.luau" "$rendered_example"; then
+		echo "Rendered direct-children example is missing included init.luau source: $rendered_example" >&2
+		exit 1
+	fi
+done
 
 echo "Pages artifact shape OK: $site_path"
