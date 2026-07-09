@@ -63,4 +63,5 @@ It does not own runtime registries, boot sequencing, serialization, dispatch par
 - Treat `docs/` as the canonical documentation site source.
 - Update `CHANGELOG.md` for package milestones.
 - Use version slots as `[core release].[implementation].[bug-fix/patch]`.
-- Continuous releases may be generated for every commit, but stable version notes belong in the changelog.
+- Use `main` for public stable releases, `canary` for early features, and `ci` for testing/CI work.
+- Continuous public releases may be generated for every `main` commit, but stable version notes belong in the changelog.

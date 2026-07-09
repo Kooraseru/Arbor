@@ -6,7 +6,7 @@ on:
     branches:
       - main
       - canary
-      - build
+      - ci
 
 jobs:
   examples-shape:

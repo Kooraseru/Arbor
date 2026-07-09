@@ -24,6 +24,20 @@ powershell -ExecutionPolicy Bypass -File tools/rules/run-architecture-validator.
 
 For repository CI, mirror these checks with paths relative to the package root.
 
+## Branches
+
+Arbor uses three long-lived branches:
+
+```txt
+main    public stable package line
+canary  early features before they are promoted
+ci      testing/CI branch, not public-use docs or releases
+```
+
+CI runs on all three branches. GitHub Pages and public commit releases only run from `main`.
+
+If Pages deployment is rejected by environment protection, update the `github-pages` environment in repository settings so `main` is allowed to deploy.
+
 ## Releases
 
 Stable package milestones are recorded in `CHANGELOG.md`, starting with `1.0.0`.
@@ -36,7 +50,7 @@ Arbor versions use the slots:
 
 Use the second slot for each implementation pass that adds package surface. Use the third slot for corrections, docs fixes, workflow fixes, and bug patches within that implementation.
 
-Every commit pushed to `main` or `master` creates a lightweight GitHub release tagged as `commit-<short-sha>`. That keeps commit snapshots available without pretending each commit is a new semver-stable milestone.
+Every commit pushed to `main` creates a lightweight GitHub release tagged as `commit-<short-sha>`. That keeps public commit snapshots available without pretending each commit is a new semver-stable milestone.
 
 ## Design Notes
 

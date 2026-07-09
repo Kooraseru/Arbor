@@ -31,6 +31,9 @@ Version slots mean:
 - Added `.github/workflows/pages.yml` to build and deploy `docs/` through GitHub Pages.
 - Updated workflow checkout steps to `actions/checkout@v5`.
 - Updated Pages configuration to `actions/configure-pages@v6`.
+- Documented `main`, `canary`, and `ci` branch roles.
+- Limited public Pages and commit releases to `main`.
+- Documented the `github-pages` environment branch rule needed after the `main` rename.
 - Removed the old GitHub Wiki sync workflow and `wiki/` drafts.
 
 ## 1.1.0 - 2026-07-08
