@@ -8,6 +8,36 @@ Version slots mean:
 [core release].[implementation].[bug-fix/patch]
 ```
 
+## 1.2.0 - 2026-07-09
+
+### Summary
+
+```diff
++ Added checked RBXM package export.
++ Switched docs to MkDocs Material with branch preview labels.
++ Added local workflow rehearsal scripts for docs and export.
+```
+
+### Export
+
+- Added an RBXM exporter built with `rbx_dom_weak` and `rbx_binary`.
+- Export now packages `src/` as a top-level `ModuleScript` named `Arbor`.
+- Added export readback verification for the generated model root and expected package children.
+- Added CI artifact upload for `.tmp/rbxm-export/result/Arbor.rbxm`.
+- Kept `examples/` out of the RBXM package so fixture path assumptions stay separate from package export shape.
+
+### Documentation
+
+- Switched GitHub Pages docs from Jekyll to MkDocs Material.
+- Added branch-preview docs labels: `Arbor Canary` and `Arbor CI`.
+- Reworked examples docs to include the checked example scripts directly.
+- Added local Pages workflow rehearsal under `.github/scripts/test-pages-workflow.sh`.
+
+### Release
+
+- Updated release automation to attach `Arbor.rbxm`.
+- Updated release notes to use the latest changelog section plus commit and package metadata.
+
 ## 1.1.1 - 2026-07-08
 
 ### Summary

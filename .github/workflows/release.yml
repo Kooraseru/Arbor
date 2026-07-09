@@ -1,5 +1,8 @@
 name: Release
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   workflow_dispatch:
   push:
@@ -33,10 +36,14 @@ jobs:
             exit 0
           fi
 
+          bash .github/scripts/export-rbxm.sh
+          bash .github/scripts/write-release-notes.sh .tmp/release/notes.md "$COMMIT_SHA" .tmp/rbxm-export/result/Arbor.rbxm
+
           git tag "$tag" "$COMMIT_SHA"
           git push origin "$tag"
 
           gh release create "$tag" \
             --target "$COMMIT_SHA" \
             --title "Arbor ${tag}" \
-            --notes "Automated release for commit ${COMMIT_SHA}."
+            --notes-file .tmp/release/notes.md \
+            .tmp/rbxm-export/result/Arbor.rbxm
