@@ -8,7 +8,7 @@ Arbor is intentionally small.
 
 ## Goals
 
-- expose analyzer-visible direct child structure
+- expose Roblox instance hierarchy shape to Luau's type system
 - keep package source easy to inspect
 - avoid second sources of truth for child names
 - preserve dynamic runtime loading when validation is explicit

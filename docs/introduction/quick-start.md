@@ -30,4 +30,4 @@ local LoadModuleMap = Arbor.RuntimeLoaders.LoadModuleMap
 local actions: ActionMap = LoadModuleMap.From(script, validateAction)
 ```
 
-The key rule is simple: let Arbor describe the static tree, then validate dynamic `require` results at the runtime boundary.
+The key rule is simple: let Arbor expose the Roblox hierarchy to Luau's type system, then validate dynamic `require` results at the runtime boundary.

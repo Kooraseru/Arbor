@@ -11,7 +11,7 @@ keep modules organized as children
 avoid hand-maintained string manifests
 ```
 
-Arbor exists for the analyzer-visible part of that problem. It turns owned child trees into type-level names, child lookup types, and exact table shapes.
+Arbor exists for the analyzer-visible part of that problem. It exposes Roblox instance hierarchies to Luau's type system, then lets package code build compile-time infrastructure on top of that shape.
 
 ## What It Helps With
 
@@ -19,6 +19,7 @@ Arbor exists for the analyzer-visible part of that problem. It turns owned child
 - creating exact child-keyed records
 - filtering children by analyzer-visible class
 - pairing runtime loading with validation
+- documenting package boundaries through the tree the analyzer actually sees
 
 ## What It Avoids
 

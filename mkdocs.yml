@@ -1,5 +1,5 @@
 site_name: Arbor
-site_description: Analyzer-friendly static tree helpers for Luau and Roblox packages.
+site_description: Compile-time hierarchy logic for Luau and Roblox.
 site_url: https://kooraseru.github.io/Arbor/
 repo_url: https://github.com/Kooraseru/Arbor
 repo_name: Kooraseru/Arbor
@@ -11,6 +11,8 @@ use_directory_urls: true
 
 theme:
   name: material
+  logo: assets/brand/Icon.svg
+  favicon: assets/brand/Icon.svg
   features:
     - navigation.sections
     - navigation.path
@@ -84,6 +86,9 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.tabbed:
       alternate_style: true
+
+extra_css:
+  - assets/stylesheets/brand.css
 
 plugins:
   - search

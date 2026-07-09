@@ -1,4 +1,4 @@
-<p align="center">
+<div align="center">
   <a href="https://github.com/Kooraseru/Arbor"><img alt="Stars + Forks + License" src="https://shieldcn.dev/group/github/stars/Kooraseru/Arbor+github/forks/Kooraseru/Arbor+github/license/Kooraseru/Arbor.svg?variant=ghost"></a>
   <br>
   <a href="https://kooraseru.github.io/Arbor/"><img alt="Docs" src="https://shieldcn.dev/badge/Docs.svg?variant=ghost&logo=ri%3AFaBook"></a>
@@ -10,13 +10,11 @@
   <br>
   <a href="CHANGELOG.md"><img alt="Changelog" src="https://shieldcn.dev/badge/Changelog.svg?variant=ghost&logo=ri%3AFaClock"></a>
   <img alt="Built In" src="https://shieldcn.dev/flag/kp.svg?variant=ghost">
-</p>
-
-<div align="center">
-  <h1>Arbor</h1>
-  <p>Analyzer-friendly static tree helpers for Luau/Roblox package surfaces.</p>
+  <br><br>
+  <img src="images/Billboard.svg" alt="Arbor" width="860">
+  <h1>Compile-time hierarchy logic for Luau and Roblox.</h1>
   <p>
-    Arbor is named after the Latin word for tree. It describes and exposes the static structure of owned instance trees, enabling analyzer-friendly navigation and compile-time type extraction.
+    Arbor exposes Roblox instance hierarchies to Luau's type system so packages can build compile-time infrastructure from analyzer-visible trees.
   </p>
 </div>
 
@@ -142,7 +140,7 @@ Longer guides live on the GitHub Pages docs site:
 
 ## Concepts
 
-`Arbor` is named after the Latin word for tree. The package is about owned instance-tree shape: direct child names, child records, child lookup, and small runtime loaders that preserve a typed boundary.
+`Arbor` is named after the Latin word for tree. The package is for general-purpose Roblox instance hierarchy typing: direct child names, child records, child lookup, class-filtered children, and small runtime loaders that preserve a typed boundary.
 
 `ChildNames<T>` returns a union of direct child names visible to the Luau analyzer.
 

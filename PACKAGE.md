@@ -9,9 +9,9 @@ Roblox services: none
 
 ## Purpose
 
-Arbor is named after the Latin word for tree. It owns analyzer-facing helper types for describing and exposing the static structure of owned instance trees.
+Arbor is named after the Latin word for tree. It owns analyzer-facing helper types for exposing Roblox instance hierarchies to Luau's type system.
 
-It helps package-owned runtime loaders expose typed lookup surfaces without hand-maintained manifests.
+It helps packages build compile-time infrastructure from analyzer-visible trees without hand-maintained manifests.
 
 ## Required Dependencies
 
