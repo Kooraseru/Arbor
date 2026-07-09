@@ -72,6 +72,7 @@ jobs:
 
           config = Path("canary/mkdocs.yml")
           text = config.read_text(encoding="utf-8")
+          text = text.replace("site_name: Arbor", "site_name: Arbor Canary")
           text = text.replace("site_url: https://kooraseru.github.io/Arbor/", "site_url: https://kooraseru.github.io/Arbor/canary/")
           config.write_text(text, encoding="utf-8")
           PY
@@ -98,6 +99,7 @@ jobs:
 
           config = Path("ci/mkdocs.yml")
           text = config.read_text(encoding="utf-8")
+          text = text.replace("site_name: Arbor", "site_name: Arbor CI")
           text = text.replace("site_url: https://kooraseru.github.io/Arbor/", "site_url: https://kooraseru.github.io/Arbor/ci/")
           config.write_text(text, encoding="utf-8")
           PY

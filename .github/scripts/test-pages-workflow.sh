@@ -72,7 +72,7 @@ export_branch() {
 	git -C "$repo_root" archive "$branch" | tar -xf - -C "$destination"
 }
 
-set_site_url() {
+set_site_metadata() {
 	local config_path="$1"
 	local branch="$2"
 
@@ -87,6 +87,11 @@ import sys
 config = Path(sys.argv[1])
 branch = sys.argv[2]
 text = config.read_text(encoding="utf-8")
+display_name = {
+	"canary": "Arbor Canary",
+	"ci": "Arbor CI",
+}.get(branch, "Arbor")
+text = text.replace("site_name: Arbor", f"site_name: {display_name}")
 text = text.replace(
 	"site_url: https://kooraseru.github.io/Arbor/",
 	f"site_url: https://kooraseru.github.io/Arbor/{branch}/",
@@ -115,7 +120,7 @@ for branch in "${branches[@]}"; do
 		continue
 	fi
 
-	set_site_url "$config_path" "$branch"
+	set_site_metadata "$config_path" "$branch"
 
 	branch_site_path="$site_path"
 	if [ "$branch" != "main" ]; then
