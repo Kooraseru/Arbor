@@ -10,9 +10,15 @@
   <br>
   <a href="CHANGELOG.md"><img alt="Changelog" src="https://shieldcn.dev/badge/Changelog.svg?variant=ghost&logo=ri%3AFaClock"></a>
   <img alt="Built In" src="https://shieldcn.dev/flag/kp.svg?variant=ghost">
-  <br><br>
-  <img src="images/Billboard.svg" alt="Arbor" width="860">
-  <h1>Compile-time hierarchy logic for Luau and Roblox.</h1>
+  <br>
+  <h1></h1>
+  <!--
+  Title n/ stuff
+  -->
+  <p>
+    <img src="images/Billboard.svg" alt="Arbor" width="860">
+  </p>
+  <h1 style="margin-top: 0;">Compile-time hierarchy logic for Luau and Roblox.</h1>
   <p>
     Arbor exposes Roblox instance hierarchies to Luau's type system so packages can build compile-time infrastructure from analyzer-visible trees.
   </p>
