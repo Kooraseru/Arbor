@@ -42,10 +42,7 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: "3.x"
-<<<<<<< HEAD
-=======
           cache: pip
->>>>>>> 5af473be490a24199e472700aa29d58b7174fd3c
 
       - name: Install docs dependencies
         shell: bash
