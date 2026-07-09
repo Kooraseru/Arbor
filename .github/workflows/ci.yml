@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   pull_request:
   push:
@@ -56,3 +59,22 @@ jobs:
         run: |
           echo "Wire this job to the chosen Luau analyzer/tool installer during export."
           echo "Do not publish until this job runs real analysis."
+
+  rbxm-export:
+    name: RBXM export
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Export package RBXM
+        shell: bash
+        run: |
+          bash .github/scripts/export-rbxm.sh
+
+      - name: Upload RBXM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arbor-rbxm
+          path: .tmp/rbxm-export/result/Arbor.rbxm
+          if-no-files-found: error

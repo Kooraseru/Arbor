@@ -29,6 +29,7 @@ no game-rooted require aliases
 no high-risk any casts
 README examples are still plausible
 package extraction smoke test passes
+package RBXM export passes
 ```
 
 CI runs on:
@@ -40,6 +41,34 @@ ci
 ```
 
 GitHub Pages and public commit releases run from `main` only.
+
+## RBXM Export
+
+The RBXM export packages `src/` as a top-level `ModuleScript` named `Arbor`.
+
+It intentionally does not include `examples/`. The examples are repository fixtures with their own analyzer context, and bundling them under the exported package would change their path assumptions.
+
+Run the local export before wiring release artifacts:
+
+=== "Windows PowerShell"
+
+    ```powershell
+    bash .github/scripts/export-rbxm.sh
+    ```
+
+=== "Linux Bash"
+
+    ```bash
+    bash .github/scripts/export-rbxm.sh
+    ```
+
+=== "macOS Bash/Zsh"
+
+    ```bash
+    bash .github/scripts/export-rbxm.sh
+    ```
+
+The generated model is written to `.tmp/rbxm-export/result/Arbor.rbxm`. The exporter writes the model with `rbx_dom_weak` and `rbx_binary`, then reads it back to verify the root shape.
 
 ## Version Slots
 
