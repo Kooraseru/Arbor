@@ -18,6 +18,8 @@ jobs:
   validate:
     name: Validate release
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     outputs:
       commit_sha: ${{ steps.pin.outputs.commit_sha }}
       tag_exists: ${{ steps.pin.outputs.tag_exists }}
@@ -294,16 +296,27 @@ jobs:
         env:
           RELEASE_VERSION: ${{ needs.validate.outputs.version }}
           VALIDATED_COMMIT: ${{ needs.validate.outputs.commit_sha }}
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           if [ -z "${GH_TOKEN:-}" ]; then
-            echo "Missing GitHub token for release publication." >&2
+            echo "Missing RELEASE_TOKEN environment secret for release publication." >&2
             exit 1
           fi
 
-          if gh release view "$RELEASE_VERSION" >/dev/null 2>&1; then
+          set +e
+          view_output="$(gh release view "$RELEASE_VERSION" 2>&1)"
+          view_status="$?"
+          set -e
+
+          if [ "$view_status" = "0" ]; then
             echo "GitHub Release already exists for $RELEASE_VERSION." >&2
             exit 1
+          fi
+
+          if [ "$view_status" != "1" ]; then
+            echo "Failed to check GitHub Release state for $RELEASE_VERSION." >&2
+            echo "$view_output" >&2
+            exit "$view_status"
           fi
 
           gh release create "$RELEASE_VERSION" \
