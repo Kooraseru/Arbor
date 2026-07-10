@@ -1,44 +1,24 @@
-name: Release
+name: Release Tag
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version (e.g. v1.0.1)'
-        required: true
-        type: string
 
 permissions:
   contents: read
 
 jobs:
   validate:
-    name: Validate release
+    name: Validate release tag
     runs-on: ubuntu-latest
     permissions:
       contents: read
     outputs:
       commit_sha: ${{ steps.pin.outputs.commit_sha }}
-      tag_exists: ${{ steps.pin.outputs.tag_exists }}
-      version: ${{ steps.version.outputs.version }}
+      version: ${{ steps.release.outputs.version }}
     steps:
-      - name: Validate version input
-        id: version
-        shell: bash
-        env:
-          RELEASE_VERSION: ${{ inputs.version }}
-        run: |
-          if [[ ! "$RELEASE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
-            echo "Malformed release version: $RELEASE_VERSION" >&2
-            echo "Expected a semantic-version tag like v1.0.1 or v1.0.1-canary.1." >&2
-            exit 1
-          fi
-
-          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
-
       - name: Checkout main
         uses: actions/checkout@v5
         with:
@@ -47,75 +27,52 @@ jobs:
           fetch-tags: true
           persist-credentials: false
 
-      - name: Resolve release commit
-        id: pin
+      - name: Resolve release note
+        id: release
         shell: bash
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          if git rev-parse --verify --quiet "refs/tags/$RELEASE_VERSION" >/dev/null; then
-            tag_exists=true
-            commit_sha="$(git rev-list -n 1 "refs/tags/$RELEASE_VERSION")"
-            git checkout --detach "$commit_sha"
-            echo "Release tag $RELEASE_VERSION already exists; validating tagged commit: $commit_sha"
-          else
-            tag_exists=false
-            commit_sha="$(git rev-parse HEAD)"
-            echo "Release tag $RELEASE_VERSION does not exist; validating main commit: $commit_sha"
+          python .github/scripts/resolve-release-note.py --channel Stable --github-output "$GITHUB_OUTPUT"
+          version="$(grep '^tag=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
+          notes_source="$(grep '^notes_source=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
+
+          if [[ ! "$version" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+            echo "Malformed resolved release version: $version" >&2
+            echo "Expected a semantic-version tag like v1.0.1 or v1.0.1-canary.1." >&2
+            exit 1
           fi
 
+          if [ ! -f "$notes_source" ]; then
+            echo "Missing stable release notes source: $notes_source" >&2
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Pin validated commit
+        id: pin
+        shell: bash
+        run: |
+          commit_sha="$(git rev-parse HEAD)"
           if ! git cat-file -e "${commit_sha}^{commit}"; then
             echo "Validated commit is not available locally: $commit_sha" >&2
             exit 1
           fi
 
           echo "commit_sha=$commit_sha" >> "$GITHUB_OUTPUT"
-          echo "tag_exists=$tag_exists" >> "$GITHUB_OUTPUT"
-          echo "Validated commit: $commit_sha"
+          echo "Validated main commit: $commit_sha"
 
-      - name: Check tag state
+      - name: Check tag availability
         shell: bash
         env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          TAG_EXISTS: ${{ steps.pin.outputs.tag_exists }}
+          RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
-          validated_commit="${{ steps.pin.outputs.commit_sha }}"
-
-          if local_sha="$(git rev-list -n 1 "refs/tags/$RELEASE_VERSION" 2>/dev/null)"; then
-            if [ "$local_sha" != "$validated_commit" ]; then
-              echo "Local tag $RELEASE_VERSION exists at $local_sha, not validated commit $validated_commit." >&2
-              exit 1
-            fi
-          elif [ "$TAG_EXISTS" = "true" ]; then
-            echo "Expected local tag $RELEASE_VERSION to exist after checkout, but it was missing." >&2
+          if git rev-list -n 1 "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo "Local tag already exists: $RELEASE_VERSION" >&2
             exit 1
           fi
 
-          if remote_sha="$(git ls-remote --tags origin "refs/tags/$RELEASE_VERSION" | awk '{print $1}')"; [ -n "$remote_sha" ]; then
-            if [ "$remote_sha" != "$validated_commit" ]; then
-              echo "Remote tag $RELEASE_VERSION exists at $remote_sha, not validated commit $validated_commit." >&2
-              exit 1
-            fi
-
-            echo "Remote tag $RELEASE_VERSION already points at validated commit $validated_commit."
-          elif [ "$TAG_EXISTS" = "true" ]; then
-            echo "Expected remote tag $RELEASE_VERSION to exist, but it was missing." >&2
-            exit 1
-          fi
-      - name: Validate release note source
-        shell: bash
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          notes_source="release-notes/Stable/${RELEASE_VERSION}.md"
-          if [ ! -f "$notes_source" ]; then
-            echo "Missing stable release notes source: $notes_source" >&2
-            exit 1
-          fi
-
-          resolved="$(python .github/scripts/resolve-release-note.py --channel Stable | grep '^tag=' | cut -d= -f2-)"
-          if [ "$resolved" != "$RELEASE_VERSION" ]; then
-            echo "Requested release version $RELEASE_VERSION does not match latest stable release note $resolved." >&2
+          if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo "Remote tag already exists: $RELEASE_VERSION" >&2
             exit 1
           fi
 
@@ -178,31 +135,13 @@ jobs:
         run: |
           bash .github/scripts/export-rbxm.sh
 
-      - name: Prepare release files
-        shell: bash
-        env:
-          RELEASE_VERSION: ${{ steps.version.outputs.version }}
-          VALIDATED_COMMIT: ${{ steps.pin.outputs.commit_sha }}
-        run: |
-          mkdir -p .tmp/results/release/assets
-          cp .tmp/results/export/rbxm-export/result/Arbor.rbxm .tmp/results/release/assets/Arbor.rbxm
-          bash .github/scripts/write-release-notes.sh .tmp/results/release/notes.md "release-notes/Stable/${RELEASE_VERSION}.md" "$VALIDATED_COMMIT" .tmp/results/release/assets/Arbor.rbxm
-
-      - name: Upload release files
-        uses: actions/upload-artifact@v4
-        with:
-          name: arbor-release-files
-          path: .tmp/results/release
-          if-no-files-found: error
-
   create-tag:
-    name: Publish approved release
+    name: Create protected release tag
     runs-on: ubuntu-latest
     needs: validate
     environment: release
     permissions:
-      contents: write
-      actions: read
+      contents: read
     steps:
       - name: Checkout validated commit
         uses: actions/checkout@v5
@@ -228,12 +167,11 @@ jobs:
             exit 1
           fi
 
-      - name: Create release tag if needed
+      - name: Push release tag
         shell: bash
         env:
           RELEASE_VERSION: ${{ needs.validate.outputs.version }}
           VALIDATED_COMMIT: ${{ needs.validate.outputs.commit_sha }}
-          TAG_EXISTS: ${{ needs.validate.outputs.tag_exists }}
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           if [ -z "${RELEASE_TOKEN:-}" ]; then
@@ -241,42 +179,20 @@ jobs:
             exit 1
           fi
 
-          if [ "$TAG_EXISTS" = "true" ]; then
-            if remote_sha="$(git ls-remote --tags origin "refs/tags/$RELEASE_VERSION" | awk '{print $1}')"; [ "$remote_sha" = "$VALIDATED_COMMIT" ]; then
-              echo "Remote tag $RELEASE_VERSION already exists at validated commit $VALIDATED_COMMIT."
-              exit 0
-            fi
-
-            echo "Expected existing remote tag $RELEASE_VERSION at $VALIDATED_COMMIT, got ${remote_sha:-missing}." >&2
+          if git rev-list -n 1 "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo "Local tag already exists: $RELEASE_VERSION" >&2
             exit 1
           fi
 
-          local_tag_exists=false
-          if local_sha="$(git rev-list -n 1 "refs/tags/$RELEASE_VERSION" 2>/dev/null)"; then
-            local_tag_exists=true
-            if [ "$local_sha" != "$VALIDATED_COMMIT" ]; then
-              echo "Local tag $RELEASE_VERSION exists at $local_sha, not validated commit $VALIDATED_COMMIT." >&2
-              exit 1
-            fi
-          fi
-
-          if remote_sha="$(git ls-remote --tags origin "refs/tags/$RELEASE_VERSION" | awk '{print $1}')"; [ -n "$remote_sha" ]; then
-            if [ "$remote_sha" != "$VALIDATED_COMMIT" ]; then
-              echo "Remote tag $RELEASE_VERSION exists at $remote_sha, not validated commit $VALIDATED_COMMIT." >&2
-              exit 1
-            fi
-
-            echo "Remote tag $RELEASE_VERSION already exists at validated commit $VALIDATED_COMMIT."
-            exit 0
+          if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo "Remote tag already exists: $RELEASE_VERSION" >&2
+            exit 1
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git remote set-url origin "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-
-          if [ "$local_tag_exists" = "false" ]; then
-            git tag "$RELEASE_VERSION" "$VALIDATED_COMMIT"
-          fi
+          git tag "$RELEASE_VERSION" "$VALIDATED_COMMIT"
 
           if ! git push origin "refs/tags/$RELEASE_VERSION:refs/tags/$RELEASE_VERSION"; then
             echo "Failed to push $RELEASE_VERSION. The token may lack access, authentication may have failed, or the repository ruleset may have rejected the admin bypass." >&2
@@ -284,43 +200,3 @@ jobs:
           fi
 
           echo "Created release tag $RELEASE_VERSION at $VALIDATED_COMMIT."
-
-      - name: Download release files
-        uses: actions/download-artifact@v4
-        with:
-          name: arbor-release-files
-          path: .tmp/results/release
-
-      - name: Publish GitHub Release
-        shell: bash
-        env:
-          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
-          VALIDATED_COMMIT: ${{ needs.validate.outputs.commit_sha }}
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-        run: |
-          if [ -z "${GH_TOKEN:-}" ]; then
-            echo "Missing RELEASE_TOKEN environment secret for release publication." >&2
-            exit 1
-          fi
-
-          set +e
-          view_output="$(gh release view "$RELEASE_VERSION" 2>&1)"
-          view_status="$?"
-          set -e
-
-          if [ "$view_status" = "0" ]; then
-            echo "GitHub Release already exists for $RELEASE_VERSION." >&2
-            exit 1
-          fi
-
-          if [ "$view_status" != "1" ]; then
-            echo "Failed to check GitHub Release state for $RELEASE_VERSION." >&2
-            echo "$view_output" >&2
-            exit "$view_status"
-          fi
-
-          gh release create "$RELEASE_VERSION" \
-            --target "$VALIDATED_COMMIT" \
-            --title "Arbor ${RELEASE_VERSION}" \
-            --notes-file .tmp/results/release/notes.md \
-            .tmp/results/release/assets/Arbor.rbxm
