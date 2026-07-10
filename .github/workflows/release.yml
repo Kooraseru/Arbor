@@ -74,8 +74,22 @@ jobs:
 
           if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
             echo "Deleting existing tag $tag before replacement."
-            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/$tag"
+            git push origin --delete "$tag"
           fi
+
+          for attempt in 1 2 3 4 5; do
+            if ! git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+              break
+            fi
+
+            if [ "$attempt" = "5" ]; then
+              echo "Tag $tag still exists after deletion; repository rules or release immutability may be blocking replacement." >&2
+              exit 1
+            fi
+
+            echo "Waiting for tag $tag deletion to propagate..."
+            sleep 2
+          done
 
           gh release create "$tag" \
             --target "$target_sha" \
