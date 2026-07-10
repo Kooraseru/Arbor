@@ -63,8 +63,6 @@ jobs:
 
           bash .github/scripts/export-rbxm.sh
           mkdir -p .tmp/results/release/assets
-          git archive --format=zip --output=.tmp/results/release/assets/src.zip HEAD src
-          git archive --format=tar.gz --output=.tmp/results/release/assets/src.tar.gz HEAD src
           cp .tmp/results/export/rbxm-export/result/Arbor.rbxm .tmp/results/release/assets/Arbor.rbxm
 
           bash .github/scripts/write-release-notes.sh .tmp/results/release/notes.md "$notes_source" "$target_sha" .tmp/results/release/assets/Arbor.rbxm
@@ -82,6 +80,4 @@ jobs:
             --title "Arbor ${tag}" \
             --notes-file .tmp/results/release/notes.md \
             $prerelease_flag \
-            .tmp/results/release/assets/Arbor.rbxm \
-            .tmp/results/release/assets/src.zip \
-            .tmp/results/release/assets/src.tar.gz
+            .tmp/results/release/assets/Arbor.rbxm

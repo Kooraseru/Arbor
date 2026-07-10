@@ -32,13 +32,12 @@ Short public summary. Keep it practical and user-facing.
 ### Assets
 
 - `Arbor.rbxm`
-- `src.zip`
-- `src.tar.gz`
 
 ### Notes
 
 - User-facing caveat only if needed.
 ```
 
-`Assets` may appear in release notes because GitHub releases attach assets, but
-the constructed changelog omits that section.
+`Assets` may appear in release notes because GitHub releases attach the RBXM
+package asset, but the constructed changelog omits that section. GitHub still
+adds its automatic source-code archives separately.

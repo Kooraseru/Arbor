@@ -84,8 +84,6 @@ Stable releases should attach:
 
 ```txt
 Arbor.rbxm
-src.zip
-src.tar.gz
 ```
 
 Examples remain repository-only and are not included in exported package assets.

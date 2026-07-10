@@ -24,7 +24,7 @@
   <table>
     <tr>
       <td align="center">English</td>
-      <td align="center"><a href="content/jp/README.md">Japanese</a></td>
+      <td align="center"><a href="content/jp/README.md">日本語</a></td>
     </tr>
   </table>
 </div>

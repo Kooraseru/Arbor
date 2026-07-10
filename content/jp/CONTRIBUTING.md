@@ -73,8 +73,6 @@ v1.<release>.<patch>-canary.N
 
 ```txt
 Arbor.rbxm
-src.zip
-src.tar.gz
 ```
 
 例はリポジトリ内だけに残し、エクスポートされたパッケージアセットには含めません。

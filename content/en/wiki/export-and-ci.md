@@ -110,9 +110,10 @@ Stable releases attach:
 
 ```txt
 Arbor.rbxm
-src.zip
-src.tar.gz
 ```
+
+GitHub automatically provides source-code archives for each release tag, so the
+release workflow does not upload duplicate `src.zip` or `src.tar.gz` assets.
 
 If a GitHub release already exists for the same version tag, the release
 workflow replaces that release entry and uploads fresh assets for the same tag.

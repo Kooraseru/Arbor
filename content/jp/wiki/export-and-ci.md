@@ -107,8 +107,6 @@ v1.<release>.<patch>-canary.N
 
 ```txt
 Arbor.rbxm
-src.zip
-src.tar.gz
 ```
 
 ## Pages

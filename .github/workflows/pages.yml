@@ -62,13 +62,13 @@ jobs:
           cp -R assets content/en/wiki/assets
           cp -R assets content/jp/wiki/assets
 
-          cp .github/mkdocs.yml .tmp-mkdocs-en.yml
-          python .github/scripts/configure-mkdocs-language.py --config .tmp-mkdocs-en.yml --language en --alternate-site-url https://kooraseru.github.io/Arbor/
-          mkdocs build --config-file .tmp-mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site"
+          cp .github/mkdocs.yml .github/.tmp-mkdocs-en.yml
+          python .github/scripts/configure-mkdocs-language.py --config .github/.tmp-mkdocs-en.yml --language en --alternate-site-url https://kooraseru.github.io/Arbor/
+          mkdocs build --config-file .github/.tmp-mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site"
 
-          cp .github/mkdocs.yml .tmp-mkdocs-jp.yml
-          python .github/scripts/configure-mkdocs-language.py --config .tmp-mkdocs-jp.yml --language jp --alternate-site-url https://kooraseru.github.io/Arbor/
-          mkdocs build --config-file .tmp-mkdocs-jp.yml --site-dir "$GITHUB_WORKSPACE/_site/jp"
+          cp .github/mkdocs.yml .github/.tmp-mkdocs-jp.yml
+          python .github/scripts/configure-mkdocs-language.py --config .github/.tmp-mkdocs-jp.yml --language jp --alternate-site-url https://kooraseru.github.io/Arbor/
+          mkdocs build --config-file .github/.tmp-mkdocs-jp.yml --site-dir "$GITHUB_WORKSPACE/_site/jp"
 
       - name: Checkout canary branch
         uses: actions/checkout@v5
@@ -86,18 +86,18 @@ jobs:
           cp -R assets content/en/wiki/assets
           cp -R assets content/jp/wiki/assets
 
-          cp .github/mkdocs.yml .tmp-mkdocs-en.yml
-          python .github/scripts/configure-mkdocs-language.py --config .tmp-mkdocs-en.yml --language en --site-name "Arbor Canary" --site-url https://kooraseru.github.io/Arbor/canary/ --alternate-site-url https://kooraseru.github.io/Arbor/canary/
-          cp .github/mkdocs.yml .tmp-mkdocs-jp.yml
-          python .github/scripts/configure-mkdocs-language.py --config .tmp-mkdocs-jp.yml --language jp --site-name "Arbor Canary" --site-url https://kooraseru.github.io/Arbor/canary/jp/ --alternate-site-url https://kooraseru.github.io/Arbor/canary/
+          cp .github/mkdocs.yml .github/.tmp-mkdocs-en.yml
+          python .github/scripts/configure-mkdocs-language.py --config .github/.tmp-mkdocs-en.yml --language en --site-name "Arbor Canary" --site-url https://kooraseru.github.io/Arbor/canary/ --alternate-site-url https://kooraseru.github.io/Arbor/canary/
+          cp .github/mkdocs.yml .github/.tmp-mkdocs-jp.yml
+          python .github/scripts/configure-mkdocs-language.py --config .github/.tmp-mkdocs-jp.yml --language jp --site-name "Arbor Canary" --site-url https://kooraseru.github.io/Arbor/canary/jp/ --alternate-site-url https://kooraseru.github.io/Arbor/canary/
 
       - name: Build canary docs preview
         if: hashFiles('canary/.github/mkdocs.yml') != ''
         shell: bash
         run: |
           cd canary
-          mkdocs build --config-file .tmp-mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site/canary"
-          mkdocs build --config-file .tmp-mkdocs-jp.yml --site-dir "$GITHUB_WORKSPACE/_site/canary/jp"
+          mkdocs build --config-file .github/.tmp-mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site/canary"
+          mkdocs build --config-file .github/.tmp-mkdocs-jp.yml --site-dir "$GITHUB_WORKSPACE/_site/canary/jp"
 
       - name: Checkout ci branch
         uses: actions/checkout@v5
@@ -115,18 +115,18 @@ jobs:
           cp -R assets content/en/wiki/assets
           cp -R assets content/jp/wiki/assets
 
-          cp .github/mkdocs.yml .tmp-mkdocs-en.yml
-          python .github/scripts/configure-mkdocs-language.py --config .tmp-mkdocs-en.yml --language en --site-name "Arbor CI" --site-url https://kooraseru.github.io/Arbor/ci/ --alternate-site-url https://kooraseru.github.io/Arbor/ci/
-          cp .github/mkdocs.yml .tmp-mkdocs-jp.yml
-          python .github/scripts/configure-mkdocs-language.py --config .tmp-mkdocs-jp.yml --language jp --site-name "Arbor CI" --site-url https://kooraseru.github.io/Arbor/ci/jp/ --alternate-site-url https://kooraseru.github.io/Arbor/ci/
+          cp .github/mkdocs.yml .github/.tmp-mkdocs-en.yml
+          python .github/scripts/configure-mkdocs-language.py --config .github/.tmp-mkdocs-en.yml --language en --site-name "Arbor CI" --site-url https://kooraseru.github.io/Arbor/ci/ --alternate-site-url https://kooraseru.github.io/Arbor/ci/
+          cp .github/mkdocs.yml .github/.tmp-mkdocs-jp.yml
+          python .github/scripts/configure-mkdocs-language.py --config .github/.tmp-mkdocs-jp.yml --language jp --site-name "Arbor CI" --site-url https://kooraseru.github.io/Arbor/ci/jp/ --alternate-site-url https://kooraseru.github.io/Arbor/ci/
 
       - name: Build ci docs preview
         if: hashFiles('ci/.github/mkdocs.yml') != ''
         shell: bash
         run: |
           cd ci
-          mkdocs build --config-file .tmp-mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site/ci"
-          mkdocs build --config-file .tmp-mkdocs-jp.yml --site-dir "$GITHUB_WORKSPACE/_site/ci/jp"
+          mkdocs build --config-file .github/.tmp-mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site/ci"
+          mkdocs build --config-file .github/.tmp-mkdocs-jp.yml --site-dir "$GITHUB_WORKSPACE/_site/ci/jp"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
