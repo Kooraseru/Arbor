@@ -17,6 +17,7 @@ jobs:
       contents: read
     outputs:
       commit_sha: ${{ steps.pin.outputs.commit_sha }}
+      tag_exists: ${{ steps.tag.outputs.exists }}
       version: ${{ steps.release.outputs.version }}
     steps:
       - name: Checkout main
@@ -61,20 +62,24 @@ jobs:
           echo "commit_sha=$commit_sha" >> "$GITHUB_OUTPUT"
           echo "Validated main commit: $commit_sha"
 
-      - name: Check tag availability
+      - name: Check tag state
+        id: tag
         shell: bash
         env:
           RELEASE_VERSION: ${{ steps.release.outputs.version }}
         run: |
+          tag_exists=false
           if git rev-list -n 1 "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
-            echo "Local tag already exists: $RELEASE_VERSION" >&2
-            exit 1
+            tag_exists=true
+            echo "Local tag already exists and will be replaced after approval: $RELEASE_VERSION"
           fi
 
           if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
-            echo "Remote tag already exists: $RELEASE_VERSION" >&2
-            exit 1
+            tag_exists=true
+            echo "Remote tag already exists and will be replaced after approval: $RELEASE_VERSION"
           fi
+
+          echo "exists=$tag_exists" >> "$GITHUB_OUTPUT"
 
       - name: Construct changelog
         shell: bash
@@ -172,6 +177,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ needs.validate.outputs.version }}
           VALIDATED_COMMIT: ${{ needs.validate.outputs.commit_sha }}
+          TAG_EXISTS: ${{ needs.validate.outputs.tag_exists }}
           RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
           if [ -z "${RELEASE_TOKEN:-}" ]; then
@@ -180,13 +186,17 @@ jobs:
           fi
 
           if git rev-list -n 1 "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
-            echo "Local tag already exists: $RELEASE_VERSION" >&2
-            exit 1
+            echo "Deleting existing local tag before replacement: $RELEASE_VERSION"
+            git tag -d "$RELEASE_VERSION"
           fi
 
           if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
-            echo "Remote tag already exists: $RELEASE_VERSION" >&2
-            exit 1
+            echo "Deleting existing remote tag before replacement: $RELEASE_VERSION"
+            git remote set-url origin "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+            if ! git push origin --delete "$RELEASE_VERSION"; then
+              echo "Failed to delete existing remote tag $RELEASE_VERSION. The token may lack access, authentication may have failed, or the repository ruleset may have rejected the admin bypass." >&2
+              exit 1
+            fi
           fi
 
           git config user.name "github-actions[bot]"
