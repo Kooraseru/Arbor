@@ -47,4 +47,5 @@ Order:
 2. Build MkDocs sites for configured branches and languages.
 3. Deploy the generated Pages artifact.
 
-`CHANGELOG.md` is constructed during workflows. It is not checked in.
+`CHANGELOG.md` is constructed Markdown. Regenerate it from `release-notes/`
+when release notes change.
