@@ -19,6 +19,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Construct changelog
+        shell: bash
+        run: |
+          python .github/scripts/construct-changelog.py
+
       - name: Check required files
         shell: bash
         run: |
@@ -34,10 +39,8 @@ jobs:
       - name: Verify constructed changelog
         shell: bash
         run: |
-          cp CHANGELOG.md .tmp-changelog.md
           python .github/scripts/construct-changelog.py
-          diff -u .tmp-changelog.md CHANGELOG.md
-          rm .tmp-changelog.md
+          test -f CHANGELOG.md
 
       - name: Verify release note resolver
         shell: bash

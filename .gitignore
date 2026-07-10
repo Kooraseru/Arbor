@@ -18,6 +18,7 @@ pesde.lock
 wally.lock
 
 # Build/export scratch
+CHANGELOG.md
 .tmp/
 dist/
 build/

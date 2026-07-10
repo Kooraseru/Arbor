@@ -42,6 +42,8 @@ jobs:
               ;;
           esac
 
+          python .github/scripts/construct-changelog.py
+
           python .github/scripts/resolve-release-note.py --channel "$channel" --github-output "$GITHUB_OUTPUT"
           tag="$(grep '^tag=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
           notes_source="$(grep '^notes_source=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
@@ -59,16 +61,18 @@ jobs:
             prerelease_flag=""
           fi
 
-          python .github/scripts/construct-changelog.py
-
           bash .github/scripts/export-rbxm.sh
           mkdir -p .tmp/results/release/assets
           cp .tmp/results/export/rbxm-export/result/Arbor.rbxm .tmp/results/release/assets/Arbor.rbxm
 
           bash .github/scripts/write-release-notes.sh .tmp/results/release/notes.md "$notes_source" "$target_sha" .tmp/results/release/assets/Arbor.rbxm
 
-          git tag --force "$tag" "$target_sha"
-          git push --force origin "$tag"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists; leaving protected tag target unchanged."
+          else
+            git tag "$tag" "$target_sha"
+            git push origin "$tag"
+          fi
 
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "Replacing existing release $tag."

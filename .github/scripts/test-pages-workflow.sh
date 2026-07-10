@@ -160,6 +160,11 @@ for branch in "${branches[@]}"; do
 		branch_site_path="$site_path/$branch"
 	fi
 
+	(
+		cd "$branch_path"
+		"$python_cmd" .github/scripts/construct-changelog.py
+	)
+
 	for language in en jp; do
 		language_content_dir="$branch_path/content/$language/wiki"
 		if [ ! -d "$language_content_dir" ]; then

@@ -10,8 +10,10 @@ on:
     paths:
       - "assets/**"
       - "content/**"
+      - "release-notes/**"
       - ".github/mkdocs.yml"
       - ".github/wiki-languages.yml"
+      - ".github/scripts/construct-changelog.py"
       - ".github/scripts/configure-mkdocs-language.py"
       - ".github/workflows/pages.yml"
 
@@ -58,6 +60,7 @@ jobs:
         run: |
           mkdir -p "$GITHUB_WORKSPACE/_site"
           cd main
+          python .github/scripts/construct-changelog.py
           rm -rf content/en/wiki/assets content/jp/wiki/assets
           cp -R assets content/en/wiki/assets
           cp -R assets content/jp/wiki/assets
@@ -82,6 +85,7 @@ jobs:
         shell: bash
         run: |
           cd canary
+          python .github/scripts/construct-changelog.py
           rm -rf content/en/wiki/assets content/jp/wiki/assets
           cp -R assets content/en/wiki/assets
           cp -R assets content/jp/wiki/assets
@@ -111,6 +115,7 @@ jobs:
         shell: bash
         run: |
           cd ci
+          python .github/scripts/construct-changelog.py
           rm -rf content/en/wiki/assets content/jp/wiki/assets
           cp -R assets content/en/wiki/assets
           cp -R assets content/jp/wiki/assets
