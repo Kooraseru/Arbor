@@ -67,16 +67,14 @@ jobs:
 
           bash .github/scripts/write-release-notes.sh .tmp/results/release/notes.md "$notes_source" "$target_sha" .tmp/results/release/assets/Arbor.rbxm
 
-          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
-            echo "Tag $tag already exists; leaving protected tag target unchanged."
-          else
-            git tag "$tag" "$target_sha"
-            git push origin "$tag"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Deleting existing release $tag before replacement."
+            gh release delete "$tag" --yes
           fi
 
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Replacing existing release $tag."
-            gh release delete "$tag" --yes
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
+            echo "Deleting existing tag $tag before replacement."
+            gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/$tag"
           fi
 
           gh release create "$tag" \
