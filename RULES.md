@@ -1,7 +1,5 @@
 # Arbor Rules
 
-Canonical: Yes
-
 These rules are intentionally small. Arbor is a standalone Luau package, not a whole game repository.
 
 ## Purpose
@@ -44,7 +42,6 @@ It does not own runtime registries, boot sequencing, serialization, dispatch par
 
 - Every Luau file starts with a path label and `--!strict`.
 - Use relative or package-local requires for local source modules.
-- Do not use rooted game aliases such as `@game`, `@Shared`, `@Client`, or `@Server`.
 - Use `const` for named policy, identity, limit, default, or shared configuration values.
 - Use `camelCase` for ordinary locals and constants.
 - Use `PascalCase` for required module bindings, exported types, and public module functions.
@@ -59,9 +56,9 @@ It does not own runtime registries, boot sequencing, serialization, dispatch par
 ## Docs And Releases
 
 - Keep README focused on install, quick start, and public API.
-- Put longer explanations in `docs/*.md`.
-- Treat `docs/` as the canonical documentation site source.
-- Update `CHANGELOG.md` for package milestones.
+- Put longer explanations in `content/<language>/wiki/*.md`.
+- Treat `content/<language>/wiki/` as the canonical documentation site source.
+- Update `release-notes/Stable/*.md` for stable package milestones, then construct `CHANGELOG.md`.
 - Use version slots as `[core release].[implementation].[bug-fix/patch]`.
 - Use `main` for public stable releases, `canary` for early features, and `ci` for testing/CI work.
 - Continuous public releases may be generated for every `main` commit, but stable version notes belong in the changelog.

@@ -1,16 +1,38 @@
 # Pre-release Notes
 
-This folder is for Arbor preview release notes.
+Pre-release notes are the public source for preview GitHub releases and the
+constructed changelog.
 
-Pre-release notes use the same Markdown template as stable notes, but their
-channel is `Pre-release` and their status should avoid implying stable
-availability.
-
-Use filenames that match the prerelease tag:
+Use one Markdown file per pre-release tag:
 
 ```txt
-v1.1.0-canary.1.md
+release-notes/Pre-release/v1.1.0-canary.1.md
 ```
 
-The `canary` name remains part of branch and tag mechanics. Public release-note
-language should use `Pre-release`.
+Pre-release notes are grouped under their base version in the constructed
+changelog. For example, `v1.1.0-canary.1.md` appears under `v1.1.0` as a
+pre-release segment named `canary.1`.
+
+Use `##` for the release heading so the note can be embedded cleanly.
+
+## Format
+
+```md
+## v1.1.0-canary.1
+
+Channel: Pre-release
+Date: YYYY-MM-DD
+
+### Summary
+
+Short preview summary. Say what is available to try.
+
+### Changes
+
+- Preview change.
+- Preview change.
+
+### Notes
+
+- Pre-release behavior may change before stable.
+```

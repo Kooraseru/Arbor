@@ -31,6 +31,19 @@ jobs:
           test -d src/InstanceTree
           test -d src/RuntimeLoaders
 
+      - name: Verify constructed changelog
+        shell: bash
+        run: |
+          cp CHANGELOG.md .tmp-changelog.md
+          python .github/scripts/construct-changelog.py
+          diff -u .tmp-changelog.md CHANGELOG.md
+          rm .tmp-changelog.md
+
+      - name: Verify release note resolver
+        shell: bash
+        run: |
+          python .github/scripts/resolve-release-note.py --channel Stable
+
       - name: Reject game-rooted requires
         shell: bash
         run: |

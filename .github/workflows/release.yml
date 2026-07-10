@@ -5,14 +5,10 @@ env:
 
 on:
   workflow_dispatch:
-    inputs:
-      version:
-        description: Release tag to publish.
-        required: true
-        type: string
   push:
-    tags:
-      - v1.*
+    branches:
+      - main
+      - canary
 
 permissions:
   contents: write
@@ -26,44 +22,55 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          ref: ${{ inputs.version || github.ref_name }}
 
       - name: Create package release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.version || github.ref_name }}
+          RELEASE_BRANCH: ${{ github.ref_name }}
         run: |
-          tag="$RELEASE_TAG"
-          target_sha="$(git rev-parse "${tag}^{commit}")"
-
-          case "$tag" in
-            v1.*-canary.*)
-              notes_source="release-notes/Pre-release/${tag}.md"
-              prerelease_flag="--prerelease"
+          case "$RELEASE_BRANCH" in
+            main)
+              channel="Stable"
               ;;
-            v1.*)
-              notes_source="release-notes/Stable/${tag}.md"
-              prerelease_flag=""
+            canary)
+              channel="Pre-release"
               ;;
             *)
-              echo "Unsupported release tag: $tag" >&2
+              echo "Unsupported release branch: $RELEASE_BRANCH" >&2
               exit 1
               ;;
           esac
+
+          python .github/scripts/resolve-release-note.py --channel "$channel" --github-output "$GITHUB_OUTPUT"
+          tag="$(grep '^tag=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
+          notes_source="$(grep '^notes_source=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
+          prerelease="$(grep '^prerelease=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
+          target_sha="$(git rev-parse HEAD)"
 
           if [ ! -f "$notes_source" ]; then
             echo "Missing release notes: $notes_source" >&2
             exit 1
           fi
 
+          if [ "$prerelease" = "true" ]; then
+            prerelease_flag="--prerelease"
+          else
+            prerelease_flag=""
+          fi
+
+          python .github/scripts/construct-changelog.py
+
           bash .github/scripts/export-rbxm.sh
           mkdir -p .tmp/results/release/assets
-          git archive --format=zip --output=.tmp/results/release/assets/src.zip "$tag" src
-          git archive --format=tar.gz --output=.tmp/results/release/assets/src.tar.gz "$tag" src
+          git archive --format=zip --output=.tmp/results/release/assets/src.zip HEAD src
+          git archive --format=tar.gz --output=.tmp/results/release/assets/src.tar.gz HEAD src
           cp .tmp/results/export/rbxm-export/result/Arbor.rbxm .tmp/results/release/assets/Arbor.rbxm
 
           bash .github/scripts/write-release-notes.sh .tmp/results/release/notes.md "$notes_source" "$target_sha" .tmp/results/release/assets/Arbor.rbxm
+
+          git tag --force "$tag" "$target_sha"
+          git push --force origin "$tag"
 
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "Replacing existing release $tag."

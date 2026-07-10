@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="../../images/Billboard.svg" alt="Arbor" width="860">
+  <img src="../../assets/brand/Billboard.svg" alt="Arbor" width="860">
   <h3>Luau 向けの型安全な Roblox インスタンスツリー。</h3>
 
   <p>
@@ -167,11 +167,11 @@ RuntimeLoaders/LoadModuleMap.From(root, validate)
 
 日本語 wiki のソースは `content/jp/wiki/` にあります。wiki で参照する例は `content/jp/examples/` にあります。
 
-- [ホーム](https://jp.kooraseru.github.io/Arbor/)
-- [例](https://jp.kooraseru.github.io/Arbor/examples/)
-- [InstanceTree API](https://jp.kooraseru.github.io/Arbor/api/instance-tree/)
-- [Runtime Loaders](https://jp.kooraseru.github.io/Arbor/runtime-loaders/)
-- [FAQ](https://jp.kooraseru.github.io/Arbor/faq/)
+- [ホーム](https://kooraseru.github.io/Arbor/jp/)
+- [例](https://kooraseru.github.io/Arbor/jp/examples/)
+- [InstanceTree API](https://kooraseru.github.io/Arbor/jp/api/instance-tree/)
+- [Runtime Loaders](https://kooraseru.github.io/Arbor/jp/runtime-loaders/)
+- [FAQ](https://kooraseru.github.io/Arbor/jp/faq/)
 
 ### 要件
 

@@ -4,7 +4,7 @@ title: Changelog
 
 # Changelog
 
-The changelog is constructed Markdown generated from stable package-history source data.
+The changelog is constructed Markdown generated from stable release notes.
 
 Release-note sources live under `release-notes/Stable` and
 `release-notes/Pre-release`.

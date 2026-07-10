@@ -21,6 +21,8 @@ Run focused validation before proposing a change:
 bash -n .github/scripts/write-release-notes.sh
 bash -n .github/scripts/export-rbxm.sh
 bash -n .github/scripts/test-pages-workflow.sh
+python .github/scripts/construct-changelog.py
+python .github/scripts/resolve-release-note.py --channel Stable
 powershell -ExecutionPolicy Bypass -File .github/scripts/analyze-luau.ps1
 wsl fish ../../../.luau-lsp/analyze.fish src/Shared/Packages/Arbor/src/init.luau src/Shared/Packages/Arbor/content/en/examples/direct-children/init.luau src/Shared/Packages/Arbor/content/en/examples/class-filtered-children/init.luau src/Shared/Packages/Arbor/content/en/examples/runtime-loader/init.luau
 bash .github/scripts/export-rbxm.sh
@@ -58,9 +60,9 @@ Pre-release notes live under `release-notes/Pre-release`. The `canary` branch an
 `-canary.N` tag suffix are implementation mechanics; public release-note
 language should say `Pre-release`.
 
-`CHANGELOG.md` is constructed Markdown for stable package-history summaries.
-Update the changelog source data when stable package history changes; do not
-hand-edit constructed output as the source of truth.
+`CHANGELOG.md` is constructed Markdown for package-history summaries. Update
+release notes when package history changes; do not hand-edit constructed
+changelog output as the source of truth.
 
 Arbor follows a continuous `v1` package line:
 

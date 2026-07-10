@@ -119,6 +119,22 @@ language_site_path() {
 	fi
 }
 
+stage_docs_assets() {
+	local branch_path="$1"
+	local language="$2"
+	local language_content_dir="$branch_path/content/$language/wiki"
+	local shared_assets_dir="$branch_path/assets"
+	local target_assets_dir="$language_content_dir/assets"
+
+	if [ ! -d "$shared_assets_dir" ]; then
+		echo "Missing shared docs assets: $shared_assets_dir" >&2
+		exit 1
+	fi
+
+	rm -rf -- "$target_assets_dir"
+	cp -R "$shared_assets_dir" "$target_assets_dir"
+}
+
 for branch in "${branches[@]}"; do
 	branch_path="$workspace_path/$branch"
 
@@ -155,6 +171,7 @@ for branch in "${branches[@]}"; do
 		mkdir -p -- "$(dirname "$language_config_path")"
 		cp "$config_path" "$language_config_path"
 
+		stage_docs_assets "$branch_path" "$language"
 		set_site_metadata "$language_config_path" "$branch" "$language"
 
 		language_site_path="$(language_site_path "$branch_site_path" "$language")"

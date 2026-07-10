@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="images/Billboard.svg" alt="Arbor" width="860">
+  <img src="assets/brand/Billboard.svg" alt="Arbor" width="860">
   <h3>Typed Roblox instance trees for Luau.</h3>
 
   <p>

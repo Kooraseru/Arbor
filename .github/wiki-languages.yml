@@ -32,8 +32,7 @@ languages:
     content_dir: content/en/wiki
     examples_dir: content/en/examples
     site_url: https://kooraseru.github.io/Arbor/
-    domain_aliases:
-      - https://en.kooraseru.github.io/Arbor/
+    domain_aliases: []
   jp:
     name: Japanese
     locale: ja
@@ -43,5 +42,5 @@ languages:
     contributing: content/jp/CONTRIBUTING.md
     content_dir: content/jp/wiki
     examples_dir: content/jp/examples
-    site_url: https://jp.kooraseru.github.io/Arbor/
+    site_url: https://kooraseru.github.io/Arbor/jp/
     domain_aliases: []
