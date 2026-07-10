@@ -1,99 +1,214 @@
-name: Release
+name: Release Tag
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-      - canary
+    inputs:
+      version:
+        description: "Release tag to create, for example v1.0.1"
+        required: true
+        type: string
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  release:
-    name: Release package
+  validate:
+    name: Validate release tag
     runs-on: ubuntu-latest
+    outputs:
+      commit_sha: ${{ steps.pin.outputs.commit_sha }}
+      version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
-      - name: Create package release
+      - name: Validate version input
+        id: version
         shell: bash
         env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_BRANCH: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ inputs.version }}
         run: |
-          case "$RELEASE_BRANCH" in
-            main)
-              channel="Stable"
-              ;;
-            canary)
-              channel="Pre-release"
-              ;;
-            *)
-              echo "Unsupported release branch: $RELEASE_BRANCH" >&2
-              exit 1
-              ;;
-          esac
-
-          python .github/scripts/construct-changelog.py
-
-          python .github/scripts/resolve-release-note.py --channel "$channel" --github-output "$GITHUB_OUTPUT"
-          tag="$(grep '^tag=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
-          notes_source="$(grep '^notes_source=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
-          prerelease="$(grep '^prerelease=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
-          target_sha="$(git rev-parse HEAD)"
-
-          if [ ! -f "$notes_source" ]; then
-            echo "Missing release notes: $notes_source" >&2
+          if [[ ! "$RELEASE_VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+            echo "Malformed release version: $RELEASE_VERSION" >&2
+            echo "Expected a semantic-version tag like v1.0.1 or v1.0.1-canary.1." >&2
             exit 1
           fi
 
-          if [ "$prerelease" = "true" ]; then
-            prerelease_flag="--prerelease"
-          else
-            prerelease_flag=""
+          echo "version=$RELEASE_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Pin validated commit
+        id: pin
+        shell: bash
+        run: |
+          commit_sha="$(git rev-parse HEAD)"
+          if ! git cat-file -e "${commit_sha}^{commit}"; then
+            echo "Validated commit is not available locally: $commit_sha" >&2
+            exit 1
           fi
 
+          echo "commit_sha=$commit_sha" >> "$GITHUB_OUTPUT"
+          echo "Validated main commit: $commit_sha"
+
+      - name: Check tag availability
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if git rev-parse --verify --quiet "refs/tags/$RELEASE_VERSION" >/dev/null; then
+            echo "Local tag already exists: $RELEASE_VERSION" >&2
+            exit 1
+          fi
+
+          if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo "Remote tag already exists: $RELEASE_VERSION" >&2
+            exit 1
+          fi
+
+      - name: Validate release note source
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          notes_source="release-notes/Stable/${RELEASE_VERSION}.md"
+          if [ ! -f "$notes_source" ]; then
+            echo "Missing stable release notes source: $notes_source" >&2
+            exit 1
+          fi
+
+          resolved="$(python .github/scripts/resolve-release-note.py --channel Stable | grep '^tag=' | cut -d= -f2-)"
+          if [ "$resolved" != "$RELEASE_VERSION" ]; then
+            echo "Requested release version $RELEASE_VERSION does not match latest stable release note $resolved." >&2
+            exit 1
+          fi
+
+      - name: Construct changelog
+        shell: bash
+        run: |
+          python .github/scripts/construct-changelog.py
+          test -f CHANGELOG.md
+
+      - name: Check package shape
+        shell: bash
+        run: |
+          test -f README.md
+          test -f RULES.md
+          test -f CHANGELOG.md
+          test -f CONTRIBUTING.md
+          test -f LICENSE
+          test -f src/init.luau
+          test -d src/InstanceTree
+          test -d src/RuntimeLoaders
+
+      - name: Check examples shape
+        shell: bash
+        run: |
+          test -f content/en/examples/README.md
+          test -f content/en/examples/direct-children/README.md
+          test -f content/en/examples/direct-children/init.luau
+          test -f content/en/examples/class-filtered-children/README.md
+          test -f content/en/examples/class-filtered-children/init.luau
+          test -f content/en/examples/runtime-loader/README.md
+          test -f content/en/examples/runtime-loader/init.luau
+          test -f content/en/examples/extracted-package/README.md
+
+      - name: Reject game-rooted requires
+        shell: bash
+        run: |
+          if grep -R --line-number --include='*.luau' --include='*.lua' -E '@game|@Shared|@Client|@Server' src; then
+            echo "Found game-rooted require alias in package source." >&2
+            exit 1
+          fi
+
+      - name: Reject high-risk casts
+        shell: bash
+        run: |
+          if grep -R --line-number --include='*.luau' --include='*.lua' -E '::[[:space:]]*any|require\(.+\)[[:space:]]*::[[:space:]]*any' src; then
+            echo "Found high-risk any cast." >&2
+            exit 1
+          fi
+
+      - name: Validate release scripts
+        shell: bash
+        run: |
+          bash -n .github/scripts/export-rbxm.sh
+          bash -n .github/scripts/test-pages-workflow.sh
+          bash -n .github/scripts/write-release-notes.sh
+          python -m py_compile .github/scripts/construct-changelog.py .github/scripts/resolve-release-note.py .github/scripts/configure-mkdocs-language.py
+
+      - name: Export package RBXM
+        shell: bash
+        run: |
           bash .github/scripts/export-rbxm.sh
-          mkdir -p .tmp/results/release/assets
-          cp .tmp/results/export/rbxm-export/result/Arbor.rbxm .tmp/results/release/assets/Arbor.rbxm
 
-          bash .github/scripts/write-release-notes.sh .tmp/results/release/notes.md "$notes_source" "$target_sha" .tmp/results/release/assets/Arbor.rbxm
+  create-tag:
+    name: Create protected release tag
+    runs-on: ubuntu-latest
+    needs: validate
+    environment: release
+    steps:
+      - name: Checkout validated commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ needs.validate.outputs.commit_sha }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
 
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Deleting existing release $tag before replacement."
-            gh release delete "$tag" --yes
+      - name: Verify pinned commit
+        shell: bash
+        env:
+          VALIDATED_COMMIT: ${{ needs.validate.outputs.commit_sha }}
+        run: |
+          if ! git cat-file -e "${VALIDATED_COMMIT}^{commit}"; then
+            echo "Validated commit is no longer available: $VALIDATED_COMMIT" >&2
+            exit 1
           fi
 
-          if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
-            echo "Deleting existing tag $tag before replacement."
-            git push origin --delete "$tag"
+          checked_out="$(git rev-parse HEAD)"
+          if [ "$checked_out" != "$VALIDATED_COMMIT" ]; then
+            echo "Checked out $checked_out instead of validated commit $VALIDATED_COMMIT." >&2
+            exit 1
           fi
 
-          for attempt in 1 2 3 4 5; do
-            if ! git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
-              break
-            fi
+      - name: Create and push release tag
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          VALIDATED_COMMIT: ${{ needs.validate.outputs.commit_sha }}
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -z "${RELEASE_TOKEN:-}" ]; then
+            echo "Missing RELEASE_TOKEN environment secret. Check the release environment configuration." >&2
+            exit 1
+          fi
 
-            if [ "$attempt" = "5" ]; then
-              echo "Tag $tag still exists after deletion; repository rules may be blocking replacement." >&2
-              exit 1
-            fi
+          if git rev-parse --verify --quiet "refs/tags/$RELEASE_VERSION" >/dev/null; then
+            echo "Local tag already exists: $RELEASE_VERSION" >&2
+            exit 1
+          fi
 
-            echo "Waiting for tag $tag deletion to propagate..."
-            sleep 2
-          done
+          if git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo "Remote tag already exists: $RELEASE_VERSION" >&2
+            exit 1
+          fi
 
-          gh release create "$tag" \
-            --target "$target_sha" \
-            --title "Arbor ${tag}" \
-            --notes-file .tmp/results/release/notes.md \
-            $prerelease_flag \
-            .tmp/results/release/assets/Arbor.rbxm
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${RELEASE_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          git tag "$RELEASE_VERSION" "$VALIDATED_COMMIT"
+
+          if ! git push origin "refs/tags/$RELEASE_VERSION:refs/tags/$RELEASE_VERSION"; then
+            echo "Failed to push $RELEASE_VERSION. The token may lack access, authentication may have failed, or the repository ruleset may have rejected the admin bypass." >&2
+            exit 1
+          fi
+
+          echo "Created release tag $RELEASE_VERSION at $VALIDATED_COMMIT."
