@@ -2,7 +2,7 @@
 set -euo pipefail
 
 output_path="${1:-.tmp/results/release/notes.md}"
-notes_source="${2:-release-notes/Stable/v1.0.0.md}"
+notes_source="${2:-release-notes/Stable/v1.0.1.md}"
 commit_sha="${3:-$(git rev-parse HEAD)}"
 rbxm_path="${4:-.tmp/results/release/assets/Arbor.rbxm}"
 commit_sha="$(git rev-parse "$commit_sha")"

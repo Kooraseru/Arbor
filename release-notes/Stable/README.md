@@ -6,7 +6,7 @@ constructed changelog.
 Use one Markdown file per stable tag:
 
 ```txt
-release-notes/Stable/v1.0.0.md
+release-notes/Stable/v1.0.1.md
 ```
 
 Use `##` for the release heading so the note can be embedded under the
@@ -15,7 +15,7 @@ constructed changelog version heading.
 ## Format
 
 ```md
-## v1.0.0
+## v1.0.1
 
 Channel: Stable
 Date: YYYY-MM-DD

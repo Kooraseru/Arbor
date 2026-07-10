@@ -12,7 +12,7 @@ Stable notes live under `release-notes/Stable`. Pre-release notes live under
 ## Stable / Demo
 
 ```md
---8<-- "release-notes/Stable/v1.0.0.md"
+--8<-- "release-notes/Stable/v1.0.1.md"
 ```
 
 ## Pre-release

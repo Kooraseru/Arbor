@@ -85,7 +85,7 @@ The generated model is written to `.tmp/results/export/rbxm-export/result/Arbor.
 Release notes are Markdown files:
 
 ```txt
-release-notes/Stable/v1.0.0.md
+release-notes/Stable/v1.0.1.md
 release-notes/Pre-release/v1.1.0-canary.1.md
 ```
 

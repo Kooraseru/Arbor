@@ -201,7 +201,7 @@ package saves you time or helps your project stay typed.
 ### Versions
 
 - [Releases](https://github.com/Kooraseru/Arbor/releases) list published versions and downloadable assets.
-- [Release notes](release-notes/Stable/v1.0.0.md) describe the current stable release.
+- [Release notes](release-notes/Stable/v1.0.1.md) describe the current stable release.
 - [Changelog](CHANGELOG.md) summarizes package history after it is constructed.
 
 ### License

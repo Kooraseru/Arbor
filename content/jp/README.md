@@ -206,7 +206,7 @@ Arbor は個人でメンテされています。Issue、ドキュメント修正
 ### バージョン
 
 - [Releases](https://github.com/Kooraseru/Arbor/releases) には、公開済みバージョンとダウンロード可能なアセットが載っています。
-- [Release notes](../../release-notes/Stable/v1.0.0.md) には、現在の安定版リリースの内容が書かれています。
+- [Release notes](../../release-notes/Stable/v1.0.1.md) には、現在の安定版リリースの内容が書かれています。
 - [Changelog](../../CHANGELOG.md) は、パッケージ履歴を要約しています。
 
 ### ライセンス

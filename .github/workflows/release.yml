@@ -83,7 +83,7 @@ jobs:
             fi
 
             if [ "$attempt" = "5" ]; then
-              echo "Tag $tag still exists after deletion; repository rules or release immutability may be blocking replacement." >&2
+              echo "Tag $tag still exists after deletion; repository rules may be blocking replacement." >&2
               exit 1
             fi
 

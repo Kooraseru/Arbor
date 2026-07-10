@@ -11,7 +11,7 @@ title: リリースノート
 ## 安定版
 
 ```md
---8<-- "release-notes/Stable/v1.0.0.md"
+--8<-- "release-notes/Stable/v1.0.1.md"
 ```
 
 ## プレリリース
