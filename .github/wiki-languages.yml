@@ -1,0 +1,47 @@
+default_language: en
+project_path: Arbor
+default_domain: kooraseru.github.io
+language_domain_pattern: "{language}.kooraseru.github.io"
+
+root_policy:
+  license:
+    path: LICENSE
+    language: en
+    translated: false
+  rules:
+    path: RULES.md
+    language: en
+    translated: false
+  english_core:
+    readme: README.md
+    contributing: CONTRIBUTING.md
+    rules: RULES.md
+    license: LICENSE
+  localized_core:
+    readme: README.md
+    contributing: CONTRIBUTING.md
+
+languages:
+  en:
+    name: English
+    locale: en
+    default: true
+    root_dir: .
+    readme: README.md
+    contributing: CONTRIBUTING.md
+    content_dir: content/en/wiki
+    examples_dir: content/en/examples
+    site_url: https://kooraseru.github.io/Arbor/
+    domain_aliases:
+      - https://en.kooraseru.github.io/Arbor/
+  jp:
+    name: Japanese
+    locale: ja
+    default: false
+    root_dir: content/jp
+    readme: content/jp/README.md
+    contributing: content/jp/CONTRIBUTING.md
+    content_dir: content/jp/wiki
+    examples_dir: content/jp/examples
+    site_url: https://jp.kooraseru.github.io/Arbor/
+    domain_aliases: []

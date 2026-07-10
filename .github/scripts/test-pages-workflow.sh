@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-output_root="${1:-.tmp/pages-workflow-test}"
+output_root="${1:-.tmp/results/pages/pages-workflow-test}"
 branches=("${@:2}")
 
 if [ "${#branches[@]}" -eq 0 ]; then
@@ -14,6 +14,7 @@ output_root_path="$repo_root/$output_root"
 workspace_path="$output_root_path/workspace"
 site_path="$output_root_path/result"
 current_branch="$(git -C "$repo_root" branch --show-current)"
+local_base_url="${ARBOR_PAGES_LOCAL_BASE_URL:-http://127.0.0.1:8000/}"
 
 if command -v python3 >/dev/null 2>&1 && python3 -m pip --version >/dev/null 2>&1; then
 	python_cmd=python3
@@ -51,6 +52,10 @@ if ! "$python_cmd" -m mkdocs --version >/dev/null 2>&1; then
 	"$python_cmd" -m pip install mkdocs-material
 fi
 
+if ! "$python_cmd" -c 'import yaml' >/dev/null 2>&1; then
+	"$python_cmd" -m pip install pyyaml
+fi
+
 copy_working_tree() {
 	local destination="$1"
 
@@ -75,29 +80,43 @@ export_branch() {
 set_site_metadata() {
 	local config_path="$1"
 	local branch="$2"
+	local language="$3"
+	local branch_path
+	branch_path="$(dirname "$(dirname "$config_path")")"
+	local site_url_arg=()
+	local site_name_arg=()
+	local alternate_site_url
 
-	if [ "$branch" = "main" ]; then
-		return
+	alternate_site_url="$local_base_url"
+	if [ "$branch" != "main" ]; then
+		alternate_site_url="${local_base_url%/}/$branch/"
+	fi
+	if [ "$language" = "en" ]; then
+		site_url_arg=(--site-url "$alternate_site_url")
+	else
+		site_url_arg=(--site-url "${alternate_site_url%/}/$language/")
+	fi
+	if [ "$branch" = "canary" ]; then
+		site_name_arg=(--site-name "Arbor Canary")
+	elif [ "$branch" = "ci" ]; then
+		site_name_arg=(--site-name "Arbor CI")
 	fi
 
-	"$python_cmd" - "$(python_path "$config_path")" "$branch" <<'PY'
-from pathlib import Path
-import sys
+	(
+		cd "$branch_path"
+		"$python_cmd" .github/scripts/configure-mkdocs-language.py --config "$(python_path "$config_path")" --language "$language" "${site_name_arg[@]}" "${site_url_arg[@]}" --alternate-site-url "$alternate_site_url"
+	)
+}
 
-config = Path(sys.argv[1])
-branch = sys.argv[2]
-text = config.read_text(encoding="utf-8")
-display_name = {
-	"canary": "Arbor Canary",
-	"ci": "Arbor CI",
-}.get(branch, "Arbor")
-text = text.replace("site_name: Arbor", f"site_name: {display_name}")
-text = text.replace(
-	"site_url: https://kooraseru.github.io/Arbor/",
-	f"site_url: https://kooraseru.github.io/Arbor/{branch}/",
-)
-config.write_text(text, encoding="utf-8")
-PY
+language_site_path() {
+	local base_path="$1"
+	local language="$2"
+
+	if [ "$language" = "en" ]; then
+		printf '%s\n' "$base_path"
+	else
+		printf '%s/%s\n' "$base_path" "$language"
+	fi
 }
 
 for branch in "${branches[@]}"; do
@@ -114,24 +133,38 @@ for branch in "${branches[@]}"; do
 		export_branch "$branch" "$branch_path"
 	fi
 
-	config_path="$branch_path/mkdocs.yml"
+	config_path="$branch_path/.github/mkdocs.yml"
 	if [ ! -f "$config_path" ]; then
-		echo "Skipping docs build for $branch: no mkdocs.yml"
+		echo "Skipping docs build for $branch: no .github/mkdocs.yml"
 		continue
 	fi
-
-	set_site_metadata "$config_path" "$branch"
 
 	branch_site_path="$site_path"
 	if [ "$branch" != "main" ]; then
 		branch_site_path="$site_path/$branch"
 	fi
 
-	echo "Building $branch docs -> $branch_site_path"
-	(
-		cd "$branch_path"
-		"$python_cmd" -m mkdocs build --config-file mkdocs.yml --site-dir "$(python_path "$branch_site_path")"
-	)
+	for language in en jp; do
+		language_content_dir="$branch_path/content/$language/wiki"
+		if [ ! -d "$language_content_dir" ]; then
+			echo "Skipping $branch $language docs: no content/$language/wiki"
+			continue
+		fi
+
+		language_config_path="$branch_path/.tmp/mkdocs-$language.yml"
+		mkdir -p -- "$(dirname "$language_config_path")"
+		cp "$config_path" "$language_config_path"
+
+		set_site_metadata "$language_config_path" "$branch" "$language"
+
+		language_site_path="$(language_site_path "$branch_site_path" "$language")"
+
+		echo "Building $branch $language docs -> $language_site_path"
+		(
+			cd "$branch_path"
+			"$python_cmd" -m mkdocs build --config-file ".tmp/mkdocs-$language.yml" --site-dir "$(python_path "$language_site_path")"
+		)
+	done
 done
 
 if [ ! -d "$site_path" ]; then
@@ -146,13 +179,30 @@ fi
 
 for rendered_example in \
 	"$site_path/examples/direct-children/index.html" \
+	"$site_path/jp/examples/direct-children/index.html" \
 	"$site_path/canary/examples/direct-children/index.html" \
+	"$site_path/canary/jp/examples/direct-children/index.html" \
 	"$site_path/ci/examples/direct-children/index.html"
 do
-	if [ -f "$rendered_example" ] && ! grep -q "Arbor/examples/direct-children/init.luau" "$rendered_example"; then
+	if [ -f "$rendered_example" ] && ! grep -Eq "Arbor/content/(en|jp)/examples/direct-children/init.luau" "$rendered_example"; then
 		echo "Rendered direct-children example is missing included init.luau source: $rendered_example" >&2
 		exit 1
 	fi
 done
 
+for rendered_index in \
+	"$site_path/index.html" \
+	"$site_path/jp/index.html" \
+	"$site_path/canary/index.html" \
+	"$site_path/canary/jp/index.html" \
+	"$site_path/ci/index.html" \
+	"$site_path/ci/jp/index.html"
+do
+	if [ -f "$rendered_index" ] && ! grep -q "md-select" "$rendered_index"; then
+		echo "Rendered docs index is missing the Material language selector: $rendered_index" >&2
+		exit 1
+	fi
+done
+
 echo "Pages artifact shape OK: $site_path"
+echo "Serve locally with: $python_cmd -m http.server 8000 --directory $(python_path "$site_path")"

@@ -1,6 +1,0 @@
--- Arbor/examples/runtime-loader/Kick.luau
---!strict
-
---# Return
-
-return "Kick"

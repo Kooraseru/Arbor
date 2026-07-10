@@ -5,45 +5,76 @@ env:
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: Release tag to publish.
+        required: true
+        type: string
   push:
-    branches:
-      - main
+    tags:
+      - v1.*
 
 permissions:
   contents: write
 
 jobs:
   release:
-    name: Release commit
+    name: Release package
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          ref: ${{ inputs.version || github.ref_name }}
 
-      - name: Create commit release
+      - name: Create package release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          COMMIT_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ inputs.version || github.ref_name }}
         run: |
-          short_sha="${COMMIT_SHA::7}"
-          tag="commit-${short_sha}"
+          tag="$RELEASE_TAG"
+          target_sha="$(git rev-parse "${tag}^{commit}")"
 
-          if gh release view "$tag" >/dev/null 2>&1; then
-            echo "Release $tag already exists."
-            exit 0
+          case "$tag" in
+            v1.*-canary.*)
+              notes_source="release-notes/Pre-release/${tag}.md"
+              prerelease_flag="--prerelease"
+              ;;
+            v1.*)
+              notes_source="release-notes/Stable/${tag}.md"
+              prerelease_flag=""
+              ;;
+            *)
+              echo "Unsupported release tag: $tag" >&2
+              exit 1
+              ;;
+          esac
+
+          if [ ! -f "$notes_source" ]; then
+            echo "Missing release notes: $notes_source" >&2
+            exit 1
           fi
 
           bash .github/scripts/export-rbxm.sh
-          bash .github/scripts/write-release-notes.sh .tmp/release/notes.md "$COMMIT_SHA" .tmp/rbxm-export/result/Arbor.rbxm
+          mkdir -p .tmp/results/release/assets
+          git archive --format=zip --output=.tmp/results/release/assets/src.zip "$tag" src
+          git archive --format=tar.gz --output=.tmp/results/release/assets/src.tar.gz "$tag" src
+          cp .tmp/results/export/rbxm-export/result/Arbor.rbxm .tmp/results/release/assets/Arbor.rbxm
 
-          git tag "$tag" "$COMMIT_SHA"
-          git push origin "$tag"
+          bash .github/scripts/write-release-notes.sh .tmp/results/release/notes.md "$notes_source" "$target_sha" .tmp/results/release/assets/Arbor.rbxm
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Replacing existing release $tag."
+            gh release delete "$tag" --yes
+          fi
 
           gh release create "$tag" \
-            --target "$COMMIT_SHA" \
+            --target "$target_sha" \
             --title "Arbor ${tag}" \
-            --notes-file .tmp/release/notes.md \
-            .tmp/rbxm-export/result/Arbor.rbxm
+            --notes-file .tmp/results/release/notes.md \
+            $prerelease_flag \
+            .tmp/results/release/assets/Arbor.rbxm \
+            .tmp/results/release/assets/src.zip \
+            .tmp/results/release/assets/src.tar.gz

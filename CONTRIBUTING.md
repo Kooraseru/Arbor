@@ -18,9 +18,20 @@ Arbor is intentionally small. Changes should preserve the split between compile-
 Run focused validation before proposing a change:
 
 ```powershell
-wsl fish .luau-lsp/analyze.fish src/init.luau src/InstanceTree/ChildNames.luau src/InstanceTree/ChildRecord.luau src/InstanceTree/ChildOf.luau src/InstanceTree/ChildrenOfClass.luau src/RuntimeLoaders/LoadModuleMap.luau
-powershell -ExecutionPolicy Bypass -File tools/rules/run-architecture-validator.ps1 -Root .
+bash -n .github/scripts/write-release-notes.sh
+bash -n .github/scripts/export-rbxm.sh
+bash -n .github/scripts/test-pages-workflow.sh
+powershell -ExecutionPolicy Bypass -File .github/scripts/analyze-luau.ps1
+wsl fish ../../../.luau-lsp/analyze.fish src/Shared/Packages/Arbor/src/init.luau src/Shared/Packages/Arbor/content/en/examples/direct-children/init.luau src/Shared/Packages/Arbor/content/en/examples/class-filtered-children/init.luau src/Shared/Packages/Arbor/content/en/examples/runtime-loader/init.luau
+bash .github/scripts/export-rbxm.sh
+python -m mkdocs build --config-file .github\mkdocs.yml --site-dir ..\.tmp\results\docs\mkdocs-site
+bash .github/scripts/test-pages-workflow.sh .tmp/results/pages/pages-workflow-test canary
+git diff --check
 ```
+
+The checked-in analyzer wrapper validates Arbor through the Packages workspace
+`.luau-lsp` sourcemap and global types. Do not add a second global types file or
+exported-package analyzer mirror inside Arbor.
 
 For repository CI, mirror these checks with paths relative to the package root.
 
@@ -34,23 +45,48 @@ canary  early features before they are promoted
 ci      testing/CI branch, not public-use docs or releases
 ```
 
-CI runs on all three branches. GitHub Pages and public commit releases only run from `main`.
+CI runs on all three branches. GitHub Pages runs from `main`. Package releases
+are created from version tags.
 
 If Pages deployment is rejected by environment protection, update the `github-pages` environment in repository settings so `main` is allowed to deploy.
 
 ## Releases
 
-Stable package milestones are recorded in `CHANGELOG.md`, starting with `1.0.0`.
+Stable package release notes live under `release-notes/Stable`.
 
-Arbor versions use the slots:
+Pre-release notes live under `release-notes/Pre-release`. The `canary` branch and
+`-canary.N` tag suffix are implementation mechanics; public release-note
+language should say `Pre-release`.
+
+`CHANGELOG.md` is constructed Markdown for stable package-history summaries.
+Update the changelog source data when stable package history changes; do not
+hand-edit constructed output as the source of truth.
+
+Arbor follows a continuous `v1` package line:
 
 ```txt
-[core release].[implementation].[bug-fix/patch]
+v1.<release>.<patch>
 ```
 
-Use the second slot for each implementation pass that adds package surface. Use the third slot for corrections, docs fixes, workflow fixes, and bug patches within that implementation.
+Pre-release tags append the canary suffix:
 
-Every commit pushed to `main` creates a lightweight GitHub release tagged as `commit-<short-sha>`. That keeps public commit snapshots available without pretending each commit is a new semver-stable milestone.
+```txt
+v1.<release>.<patch>-canary.N
+```
+
+Only package changes create package versions. Documentation, workflow, examples,
+media, and repository maintenance may be mentioned in release notes when they
+ship alongside a release, but they do not create package versions by themselves.
+
+Stable releases should attach:
+
+```txt
+Arbor.rbxm
+src.zip
+src.tar.gz
+```
+
+Examples remain repository-only and are not included in exported package assets.
 
 ## Design Notes
 

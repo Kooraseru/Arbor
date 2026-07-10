@@ -19,7 +19,8 @@ Paste exact commands and results:
 ## Docs
 
 - [ ] README updated if public behavior changed.
-- [ ] CHANGELOG updated.
+- [ ] Release notes updated if release communication changed.
+- [ ] Changelog source updated if constructed package history changed.
 - [ ] Export/setup docs updated if install behavior changed.
 
 > [!IMPORTANT]

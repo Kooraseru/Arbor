@@ -19,7 +19,7 @@ Describe the issue.
 
 ## Minimal Reproduction
 
-```luau
+```lua
 -- paste the smallest script/type surface that reproduces the issue
 ```
 

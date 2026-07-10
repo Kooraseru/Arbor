@@ -8,8 +8,10 @@ on:
       - canary
       - ci
     paths:
-      - "docs/**"
-      - "mkdocs.yml"
+      - "content/**"
+      - ".github/mkdocs.yml"
+      - ".github/wiki-languages.yml"
+      - ".github/scripts/configure-mkdocs-language.py"
       - ".github/workflows/pages.yml"
 
 permissions:
@@ -47,15 +49,16 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          python -m pip install mkdocs-material
+          python -m pip install mkdocs-material pyyaml
 
       - name: Build main docs
-        if: hashFiles('main/mkdocs.yml') != ''
+        if: hashFiles('main/.github/mkdocs.yml') != ''
         shell: bash
         run: |
           mkdir -p "$GITHUB_WORKSPACE/_site"
           cd main
-          mkdocs build --config-file mkdocs.yml --site-dir "$GITHUB_WORKSPACE/_site"
+          python .github/scripts/configure-mkdocs-language.py --language en
+          mkdocs build --config-file .github/mkdocs.yml --site-dir "$GITHUB_WORKSPACE/_site"
 
       - name: Checkout canary branch
         uses: actions/checkout@v5
@@ -64,26 +67,19 @@ jobs:
           ref: canary
           path: canary
 
-      - name: Configure canary docs base URL
-        if: hashFiles('canary/mkdocs.yml') != ''
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          config = Path("canary/mkdocs.yml")
-          text = config.read_text(encoding="utf-8")
-          text = text.replace("site_name: Arbor", "site_name: Arbor Canary")
-          text = text.replace("site_url: https://kooraseru.github.io/Arbor/", "site_url: https://kooraseru.github.io/Arbor/canary/")
-          config.write_text(text, encoding="utf-8")
-          PY
-
-      - name: Build canary docs preview
-        if: hashFiles('canary/mkdocs.yml') != ''
+      - name: Configure canary docs
+        if: hashFiles('canary/.github/mkdocs.yml') != ''
         shell: bash
         run: |
           cd canary
-          mkdocs build --config-file mkdocs.yml --site-dir "$GITHUB_WORKSPACE/_site/canary"
+          python .github/scripts/configure-mkdocs-language.py --language en --site-name "Arbor Canary" --site-url https://kooraseru.github.io/Arbor/canary/
+
+      - name: Build canary docs preview
+        if: hashFiles('canary/.github/mkdocs.yml') != ''
+        shell: bash
+        run: |
+          cd canary
+          mkdocs build --config-file .github/mkdocs.yml --site-dir "$GITHUB_WORKSPACE/_site/canary"
 
       - name: Checkout ci branch
         uses: actions/checkout@v5
@@ -92,26 +88,19 @@ jobs:
           ref: ci
           path: ci
 
-      - name: Configure ci docs base URL
-        if: hashFiles('ci/mkdocs.yml') != ''
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-
-          config = Path("ci/mkdocs.yml")
-          text = config.read_text(encoding="utf-8")
-          text = text.replace("site_name: Arbor", "site_name: Arbor CI")
-          text = text.replace("site_url: https://kooraseru.github.io/Arbor/", "site_url: https://kooraseru.github.io/Arbor/ci/")
-          config.write_text(text, encoding="utf-8")
-          PY
-
-      - name: Build ci docs preview
-        if: hashFiles('ci/mkdocs.yml') != ''
+      - name: Configure ci docs
+        if: hashFiles('ci/.github/mkdocs.yml') != ''
         shell: bash
         run: |
           cd ci
-          mkdocs build --config-file mkdocs.yml --site-dir "$GITHUB_WORKSPACE/_site/ci"
+          python .github/scripts/configure-mkdocs-language.py --language en --site-name "Arbor CI" --site-url https://kooraseru.github.io/Arbor/ci/
+
+      - name: Build ci docs preview
+        if: hashFiles('ci/.github/mkdocs.yml') != ''
+        shell: bash
+        run: |
+          cd ci
+          mkdocs build --config-file .github/mkdocs.yml --site-dir "$GITHUB_WORKSPACE/_site/ci"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

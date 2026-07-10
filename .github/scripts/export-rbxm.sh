@@ -2,7 +2,7 @@
 set -euo pipefail
 
 source_root="${1:-src}"
-output_path="${2:-.tmp/rbxm-export/result/Arbor.rbxm}"
+output_path="${2:-.tmp/results/export/rbxm-export/result/Arbor.rbxm}"
 package_name="${3:-Arbor}"
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"

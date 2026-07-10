@@ -15,7 +15,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if matches!(args.next().as_deref(), Some("verify")) {
         let model_path = PathBuf::from(
             args.next()
-                .unwrap_or_else(|| ".tmp/rbxm-export/result/Arbor.rbxm".to_owned()),
+                .unwrap_or_else(|| ".tmp/results/export/rbxm-export/result/Arbor.rbxm".to_owned()),
         );
         let package_name = args.next().unwrap_or_else(|| "Arbor".to_owned());
         return verify_model(&model_path, &package_name);
@@ -25,7 +25,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let source_root = PathBuf::from(args.next().unwrap_or_else(|| "src".to_owned()));
     let output_path = PathBuf::from(
         args.next()
-            .unwrap_or_else(|| ".tmp/rbxm-export/result/Arbor.rbxm".to_owned()),
+            .unwrap_or_else(|| ".tmp/results/export/rbxm-export/result/Arbor.rbxm".to_owned()),
     );
     let package_name = args.next().unwrap_or_else(|| "Arbor".to_owned());
 

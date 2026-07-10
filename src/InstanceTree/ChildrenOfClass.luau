@@ -3,18 +3,13 @@
 
 --# Types
 
-export type function Of(inst: type, className: type)
+export type function Of(inst: type, classType: type)
 	if not inst:is("extern") then
-		error("ChildrenOfClass.Of<T, ClassName> expects a Roblox/host extern type for T")
+		error("ChildrenOfClass.Of<T, ClassType> expects a Roblox/host extern type for T")
 	end
 
-	if not className:is("singleton") then
-		error("ChildrenOfClass.Of<T, ClassName> expects ClassName to be a string singleton")
-	end
-
-	local class = className:value()
-	if type(class) ~= "string" then
-		error("ChildrenOfClass.Of<T, ClassName> expects ClassName to be a string singleton")
+	if not classType:is("extern") then
+		error("ChildrenOfClass.Of<T, ClassType> expects ClassType to be a Roblox/host extern type")
 	end
 
 	local out = types.newtable()
@@ -23,8 +18,26 @@ export type function Of(inst: type, className: type)
 		if key:is("singleton") then
 			local name = key:value()
 			local childType = prop.read
+			local matchesClass = false
 
-			if type(name) == "string" and name ~= "Parent" and childType and childType:is(class) then
+			if childType then
+				local current = childType
+
+				while current do
+					if current == classType then
+						matchesClass = true
+						break
+					end
+
+					if not current:is("extern") then
+						break
+					end
+
+					current = current:readparent()
+				end
+			end
+
+			if type(name) == "string" and name ~= "Parent" and childType and matchesClass then
 				out:setproperty(types.singleton(name), childType)
 			end
 		end

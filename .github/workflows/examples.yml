@@ -16,30 +16,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Check packaged examples
+      - name: Check content examples
         shell: bash
         run: |
-          test -f examples/README.md
-          test -f examples/direct-children/README.md
-          test -f examples/direct-children/init.luau
-          test -f examples/class-filtered-children/README.md
-          test -f examples/class-filtered-children/init.luau
-          test -f examples/runtime-loader/README.md
-          test -f examples/runtime-loader/init.luau
-          test -f examples/extracted-package/README.md
+          test -f content/en/examples/README.md
+          test -f content/en/examples/direct-children/README.md
+          test -f content/en/examples/direct-children/init.luau
+          test -f content/en/examples/class-filtered-children/README.md
+          test -f content/en/examples/class-filtered-children/init.luau
+          test -f content/en/examples/runtime-loader/README.md
+          test -f content/en/examples/runtime-loader/init.luau
+          test -f content/en/examples/extracted-package/README.md
 
       - name: Reject forbidden example casts and aliases
         shell: bash
         run: |
-          if grep -R --line-number --include='*.luau' --include='*.lua' -E '@game|@Shared|@Client|@Server|::[[:space:]]*any|require\(.+\)[[:space:]]*::[[:space:]]*any' examples; then
-            echo "Found forbidden alias or high-risk any cast in examples."
+          if grep -R --line-number --include='*.luau' --include='*.lua' -E '@game|@Shared|@Client|@Server|::[[:space:]]*any|require\(.+\)[[:space:]]*::[[:space:]]*any' content/en/examples; then
+            echo "Found forbidden alias or high-risk any cast in content/en/examples."
             exit 1
           fi
 
       - name: Check example file shape
         shell: bash
         run: |
-          if grep -R --line-number --include='*.luau' --include='*.lua' -- '--# Examples' examples; then
+          if grep -R --line-number --include='*.luau' --include='*.lua' -- '--# Examples' content/en/examples; then
             echo "Examples should use normal file-shape headers, not --# Examples."
             exit 1
           fi
@@ -50,6 +50,6 @@ jobs:
               echo "Missing --# Return in $file"
               missing_return=1
             fi
-          done < <(find examples -type f \( -name '*.luau' -o -name '*.lua' \))
+          done < <(find content/en/examples -type f \( -name '*.luau' -o -name '*.lua' \))
 
           exit "$missing_return"

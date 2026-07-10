@@ -1,34 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-output_path="${1:-.tmp/release/notes.md}"
-commit_sha="${2:-$(git rev-parse HEAD)}"
-rbxm_path="${3:-.tmp/rbxm-export/result/Arbor.rbxm}"
+output_path="${1:-.tmp/results/release/notes.md}"
+notes_source="${2:-release-notes/Stable/v1.0.0.md}"
+commit_sha="${3:-$(git rev-parse HEAD)}"
+rbxm_path="${4:-.tmp/results/release/assets/Arbor.rbxm}"
 commit_sha="$(git rev-parse "$commit_sha")"
 
 mkdir -p -- "$(dirname -- "$output_path")"
 
-latest_section="$(awk '
-	/^## / {
-		if (seen) {
-			exit
-		}
-		seen = 1
-	}
-	seen {
-		print
-	}
-' CHANGELOG.md)"
+if [ ! -f "$notes_source" ]; then
+	echo "Missing release notes source: $notes_source" >&2
+	exit 1
+fi
 
 short_sha="${commit_sha:0:7}"
 
 cat > "$output_path" <<NOTES
-${latest_section}
+$(cat "$notes_source")
 
 ## Additional Information
 
 - Commit: \`${commit_sha}\`
-- Commit tag: \`commit-${short_sha}\`
+- Short commit: \`${short_sha}\`
 - Package model: \`Arbor.rbxm\`
 - Package root: \`ModuleScript Arbor\`
 - Package source: \`src/\`

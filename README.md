@@ -1,107 +1,137 @@
 <div align="center">
-  <a href="https://github.com/Kooraseru/Arbor"><img alt="Stars + Forks + License" src="https://shieldcn.dev/group/github/stars/Kooraseru/Arbor+github/forks/Kooraseru/Arbor+github/license/Kooraseru/Arbor.svg?variant=ghost"></a>
-  <br>
-  <a href="https://kooraseru.github.io/Arbor/"><img alt="Docs" src="https://shieldcn.dev/badge/Docs.svg?variant=ghost&logo=ri%3AFaBook"></a>
-  <a href="https://github.com/Kooraseru/Arbor/releases"><img alt="Releases" src="https://shieldcn.dev/github/Kooraseru/Arbor/release.svg?variant=ghost"></a>
-  <a href="https://github.com/Kooraseru/Arbor/issues"><img alt="Issues" src="https://shieldcn.dev/github/Kooraseru/Arbor/issues.svg?variant=ghost&logo=ri%3APiWarning"></a>
-  <br>
-  <a href="https://github.com/Kooraseru/Arbor/releases"><img alt="Downloads" src="https://shieldcn.dev/github/Kooraseru/Arbor/downloads.svg?variant=ghost"></a>
-  <a href="https://github.com/Kooraseru/Arbor/graphs/contributors"><img alt="Contributors" src="https://shieldcn.dev/github/Kooraseru/Arbor/contributors.svg?variant=ghost"></a>
-  <br>
-  <a href="CHANGELOG.md"><img alt="Changelog" src="https://shieldcn.dev/badge/Changelog.svg?variant=ghost&logo=ri%3AFaClock"></a>
-  <img alt="Built In" src="https://shieldcn.dev/flag/kp.svg?variant=ghost">
-  <br>
-  <h1></h1>
-  <!--
-  Title n/ stuff
-  -->
+  <img src="images/Billboard.svg" alt="Arbor" width="860">
+  <h3>Typed Roblox instance trees for Luau.</h3>
+
   <p>
-    <img src="images/Billboard.svg" alt="Arbor" width="860">
+    <a href="https://github.com/Kooraseru/Arbor"><img alt="Stars + Issues + License" src="https://shieldcn.dev/group/github/stars/Kooraseru/Arbor+github/Kooraseru/Arbor/issues+github/license/Kooraseru/Arbor.svg?variant=outline"></a>
+    <br>
+    <a href="https://github.com/Kooraseru/Arbor/releases"><img alt="Releases" src="https://shieldcn.dev/github/Kooraseru/Arbor/release.svg?variant=outline"></a>
   </p>
-  <h1 style="margin-top: 0;">Compile-time hierarchy logic for Luau and Roblox.</h1>
-  <p>
-    Arbor exposes Roblox instance hierarchies to Luau's type system so packages can build compile-time infrastructure from analyzer-visible trees.
-  </p>
+
+  <img src="https://counter.seku.su/cmoe?name=Kooraseru&theme=mb">
+
+  <!-- NAVIGATION -->
+  <table>
+    <tr>
+      <td align="center"><a href="#features">Features</a></td>
+      <td align="center"><a href="#quick-start">Quick Start</a></td>
+      <td align="center"><a href="#documentation">Documentation</a></td>
+      <td align="center"><a href="#project">Project</a></td>
+    </tr>
+  </table>
+
+  <!-- LANGUAGES -->
+  <table>
+    <tr>
+      <td align="center">English</td>
+      <td align="center"><a href="content/jp/README.md">Japanese</a></td>
+    </tr>
+  </table>
 </div>
 
-## Table Of Contents
+## Features
 
-- [Status](#status)
-- [Install](#install)
-- [Quick Start](#quick-start)
-- [Public API](#public-api)
-- [Docs](#docs)
-- [Concepts](#concepts)
-- [What This Proves](#what-this-proves)
-- [Runtime Loader Contract](#runtime-loader-contract)
-- [Analyzer Requirements](#analyzer-requirements)
-- [Package Boundaries](#package-boundaries)
-- [Repository Layout](#repository-layout)
+Arbor helps Luau understand Roblox instance hierarchies at compile time.[^compile-time]
 
-## Status
+- Direct child names become checked string unions such as `"Kick" | "Ban"`.
+- Child-keyed records can be typed without hand-maintained manifests.[^manifests]
+- Direct children can be filtered by analyzer-visible Roblox class, such as `ModuleScript`.
+- Direct `ModuleScript` children can be loaded at runtime through an explicit validator.[^runtime-validator]
+- Runtime loading and compile-time tree typing stay separate.
 
-Initial stable package release.
+## Quick Start
 
-> [!WARNING]
-> Typed child-name discovery still depends on analyzer/toolchain behavior. Validate your target environment before treating analyzer-derived child names as a published API guarantee.
-
-## Install
+### Install
 
 Place `Arbor` wherever your project or package manager exposes required modules.
 
 Require the package root through whatever module reference your environment provides:
 
-```luau
+```lua
 local Arbor = require(path.to.Arbor)
 ```
 
 When used inside a standalone package, internal Arbor requires use `@self` and focused child modules.
 
-> [!NOTE]
-> Package-manager metadata is intentionally not committed yet. First public export should choose the target install story instead of guessing between copy-folder, Wally, pesde, subtree, or another layout.
+### Example
 
-## Quick Start
+This example builds a typed action table from direct ModuleScript children. The child names come from the analyzer-visible tree, while loaded module values still pass through an explicit runtime validator.
 
-Use the root facade when you want fewer require lines:
-
-```luau
+```lua
 local Arbor = require(path.to.Arbor)
 
 local LoadModuleMap = Arbor.RuntimeLoaders.LoadModuleMap
+
+type ActionDefinition = {
+	Run: (playerName: string) -> (),
+}
+
+local function validateAction(value: unknown, moduleScript: ModuleScript): ActionDefinition
+	if type(value) ~= "string" then
+		error(`{moduleScript:GetFullName()} must return an action name`)
+	end
+
+	local actionName = value
+
+	return {
+		Run = function(playerName: string)
+			print(`{actionName} {playerName}`)
+		end,
+	}
+end
 
 export type ActionId = Arbor.ChildNames<typeof(script)>
 export type ActionMap = Arbor.ChildRecord<typeof(script), ActionDefinition>
 
 local actions: ActionMap = LoadModuleMap.From(script, validateAction)
 
-return actions
-```
-
-Use focused modules when you want the simplest analyzer path:
-
-```luau
-local ChildNames = require(path.to.Arbor.InstanceTree.ChildNames)
-local ChildRecord = require(path.to.Arbor.InstanceTree.ChildRecord)
-local LoadModuleMap = require(path.to.Arbor.RuntimeLoaders.LoadModuleMap)
-
-export type ActionId = ChildNames.Of<typeof(script)>
-export type ActionMap = ChildRecord.Of<typeof(script), ActionDefinition>
-
-local actions: ActionMap = LoadModuleMap.From(script, validateAction)
+actions.Kick.Run("Builder")
+actions.Ban.Run("Spammer")
 
 return actions
 ```
 
-## Public API
+With child modules named `Kick` and `Ban`, `ActionId` becomes `"Kick" | "Ban"` and `actions` is checked as a table with those keys.
 
-Root exported type aliases:
+### API And Tools
+
+To support those workflows, Arbor exposes:
+
+<table>
+  <tr>
+    <td><code>ChildNames&lt;T&gt;</code></td>
+    <td>Direct child-name unions.</td>
+  </tr>
+  <tr>
+    <td><code>ChildRecord&lt;T, V&gt;</code></td>
+    <td>Child-keyed table shapes.</td>
+  </tr>
+  <tr>
+    <td><code>ChildOf&lt;T, Name&gt;</code></td>
+    <td>The analyzer-visible type of one named direct child.</td>
+  </tr>
+  <tr>
+    <td><code>ChildNamesOfClass&lt;T, ClassType&gt;</code></td>
+    <td>Class-filtered child-name unions.</td>
+  </tr>
+  <tr>
+    <td><code>ChildrenOfClass&lt;T, ClassType&gt;</code></td>
+    <td>Class-filtered child tables.</td>
+  </tr>
+  <tr>
+    <td><code>LoadModuleMap.From(root, validate)</code></td>
+    <td>Validated runtime loading for direct ModuleScript children.</td>
+  </tr>
+</table>
+
+Root facade exports:
 
 ```txt
 Arbor.ChildNames<T>
-Arbor.ChildNamesOfClass<T, ClassName>
+Arbor.ChildNamesOfClass<T, ClassType>
 Arbor.ChildRecord<T, V>
 Arbor.ChildOf<T, Name>
-Arbor.ChildrenOfClass<T, ClassName>
+Arbor.ChildrenOfClass<T, ClassType>
 Arbor.ModuleValidator<T>
 ```
 
@@ -116,137 +146,77 @@ Arbor.InstanceTree.ChildrenOfClass
 Arbor.RuntimeLoaders.LoadModuleMap
 ```
 
-Focused modules:
+Focused module exports:
 
 ```txt
 InstanceTree/ChildNames.Of<T>
-InstanceTree/ChildNamesOfClass.Of<T, ClassName>
+InstanceTree/ChildNamesOfClass.Of<T, ClassType>
 InstanceTree/ChildRecord.Of<T, V>
 InstanceTree/ChildOf.Of<T, Name>
-InstanceTree/ChildrenOfClass.Of<T, ClassName>
+InstanceTree/ChildrenOfClass.Of<T, ClassType>
 RuntimeLoaders/LoadModuleMap.From(root, validate)
 ```
 
-## Docs
+## Documentation
 
-Longer guides live on the GitHub Pages docs site:
-
-> [!NOTE]
-> The `docs/` folder is an MkDocs Material source folder. GitHub Pages builds it before publishing, and branch previews are published under `/canary/` and `/ci/`.
+The English wiki source lives under `content/en/wiki/`. Examples referenced by
+the wiki live under `content/en/examples/`.
 
 - [Home](https://kooraseru.github.io/Arbor/)
-- [Install](https://kooraseru.github.io/Arbor/install/)
-- [Analyzer Model](https://kooraseru.github.io/Arbor/analyzer-model/)
-- [InstanceTree API](https://kooraseru.github.io/Arbor/api/instance-tree/)
 - [Examples](https://kooraseru.github.io/Arbor/examples/)
+- [InstanceTree API](https://kooraseru.github.io/Arbor/api/instance-tree/)
 - [Runtime Loaders](https://kooraseru.github.io/Arbor/runtime-loaders/)
-- [Package Boundaries](https://kooraseru.github.io/Arbor/package-boundaries/)
-- [Export And CI](https://kooraseru.github.io/Arbor/export-and-ci/)
 - [FAQ](https://kooraseru.github.io/Arbor/faq/)
 
-## Concepts
-
-`Arbor` is named after the Latin word for tree. The package is for general-purpose Roblox instance hierarchy typing: direct child names, child records, child lookup, class-filtered children, and small runtime loaders that preserve a typed boundary.
-
-`ChildNames<T>` returns a union of direct child names visible to the Luau analyzer.
-
-`ChildNamesOfClass<T, ClassName>` returns a union of direct child names whose analyzer-visible type matches the given class.
-
-`ChildRecord<T, V>` returns a table shape with direct child names as keys and `V` as the value type.
-
-`ChildOf<T, Name>` returns the analyzer-visible type of one direct child.
-
-`ChildrenOfClass<T, ClassName>` returns a table shape for direct children whose analyzer-visible type matches the given class.
-
-`LoadModuleMap.From(root, validate)` loads direct ModuleScript children at runtime, validates each required value, and returns a map keyed by ModuleScript name.
-
-> [!TIP]
-> Prefer root exported type aliases for package-facing APIs. Reach for focused modules when a leaf `.Of<T>` namespace makes a local type surface easier for the analyzer or a reader to follow.
-
-## What This Proves
-
-Typed child-name discovery proves names and instance-tree shape.
-
-> [!IMPORTANT]
-> Typed child-name discovery does not prove ModuleScript return types by itself. Runtime loaders still need validation, and package public APIs still need static, generated, or analyzer-validated surfaces.
-
-## Runtime Loader Contract
-
-```luau
-export type ModuleValidator<T> = (value: unknown, moduleScript: ModuleScript) -> T
-
-LoadModuleMap.From<T>(root: Instance, validate: ModuleValidator<T>): { [string]: T }
-```
-
-The validator is the boundary between dynamic `require` and project-owned typed behavior.
-
-> [!CAUTION]
-> Keep uncertainty at the validator boundary. Do not cast dynamic require results at call sites.
-
-## Analyzer Requirements
+### Requirements
 
 These helpers depend on the active Luau analyzer exposing direct children as literal extern properties.
+
+Roblox Studio:
+
+- no extra external tooling is required to use Arbor at runtime
+
+VS Code and other external editor workflows need:
+
+- a sourcemap/data-model provider that exposes the Roblox instance tree to the analyzer[^sourcemap]
+- [Luau LSP](https://github.com/JohnnyMorganz/luau-lsp), or an equivalent Luau analyzer integration that understands that sourcemap
+
+Specific APIs need:
+
+- `ChildNames<T>`, `ChildRecord<T, V>`, and `ChildOf<T, Name>` need direct children exposed as analyzer-visible properties.
+- `ChildNamesOfClass<T, ClassType>` and `ChildrenOfClass<T, ClassType>` also need analyzer-visible Roblox class metadata for those children.
+- `LoadModuleMap.From(root, validate)` is runtime Luau code and does not require analyzer-visible children, but typed callers still benefit from the child-name helpers above.
 
 > [!NOTE]
 > Validate your target solver/toolchain before treating child-name discovery as public API.
 
-Known confirmed behavior from current research:
+## Project
 
-```txt
-ChildNames<typeof(workspace.Origin)> produced "DefaultModule1" | "DefaultModule2"
-and rejected unrelated names in VS Code/Luau LSP.
-```
+Arbor is maintained by a solo developer. Issues, docs fixes, examples, and small
+pull requests are welcome; sponsorship is also greatly appreciated if this
+package saves you time or helps your project stay typed.
 
-Still important for export:
+- [Sponsor Kooraseru](https://github.com/sponsors/Kooraseru)
 
-```txt
-confirm CLI/external analyzer parity
-confirm behavior after package extraction
-confirm module return type strategy separately
-```
+### Versions
 
-## Package Boundaries
+- [Releases](https://github.com/Kooraseru/Arbor/releases) list published versions and downloadable assets.
+- [Release notes](release-notes/Stable/v1.0.0.md) describe the current stable release.
+- [Changelog](CHANGELOG.md) summarizes package history after it is constructed.
 
-Arbor owns analyzer-visible tree structure and small helper conventions.
-
-Arbor must not own:
-
-```txt
-runtime registries
-startup lifecycle
-serialization tags
-pipeline ordering
-dispatch/action parsing
-descriptor identity
-```
-
-`RuntimeLoaders` exists as a tiny helper for analyzer-friendly runtime loading. It is not a runtime architecture framework.
-
-## Repository Layout
-
-```txt
-Arbor/
-  .github/
-  docs/
-  .gitignore
-  src/
-    init.luau
-    InstanceTree/
-      ChildNames.luau
-      ChildNamesOfClass.luau
-      ChildRecord.luau
-      ChildOf.luau
-      ChildrenOfClass.luau
-    RuntimeLoaders/
-      LoadModuleMap.luau
-  PACKAGE.md
-  Badges.md
-  README.md
-  CHANGELOG.md
-  CONTRIBUTING.md
-  LICENSE
-```
-
-## License
+### License
 
 Apache License 2.0. See [LICENSE](LICENSE).
+
+### Contributors
+
+<a href="https://github.com/Kooraseru/Arbor/graphs/contributors" target="_blank">
+  <img src="https://contrib.rocks/image?repo=Kooraseru/Arbor" />
+</a>
+
+#### Footnotes
+
+[^compile-time]: Arbor works through Luau type functions and analyzer-visible Roblox tree metadata. It does not change Roblox runtime behavior by itself.
+[^manifests]: The child ModuleScript or instance name remains the source of truth for these helpers.
+[^runtime-validator]: The validator is where raw `require` results become project-owned typed values.
+[^sourcemap]: In external editors, the analyzer needs a model of the Roblox tree before it can see child names or classes.

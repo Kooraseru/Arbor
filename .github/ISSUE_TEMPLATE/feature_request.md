@@ -12,7 +12,7 @@ What package typing problem should this solve?
 
 ## Proposed Shape
 
-```luau
+```lua
 -- rough API or type-function shape
 ```
 
