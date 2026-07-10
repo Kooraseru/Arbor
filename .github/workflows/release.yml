@@ -1,10 +1,14 @@
-name: Release Tag
+name: Release
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+      - canary
 
 permissions:
   contents: read
@@ -16,23 +20,43 @@ jobs:
     permissions:
       contents: read
     outputs:
+      channel: ${{ steps.release.outputs.channel }}
       commit_sha: ${{ steps.pin.outputs.commit_sha }}
+      notes_source: ${{ steps.release.outputs.notes_source }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
       tag_exists: ${{ steps.tag.outputs.exists }}
       version: ${{ steps.release.outputs.version }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v5
         with:
-          ref: main
+          ref: ${{ github.ref_name == 'canary' && 'canary' || 'main' }}
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: false
+
+      - name: Resolve release channel
+        id: channel
+        shell: bash
+        run: |
+          case "${GITHUB_REF_NAME}" in
+            main)
+              echo "channel=Stable" >> "$GITHUB_OUTPUT"
+              ;;
+            canary)
+              echo "channel=Pre-release" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "Release workflow only supports main and canary, got ${GITHUB_REF_NAME}." >&2
+              exit 1
+              ;;
+          esac
 
       - name: Resolve release note
         id: release
         shell: bash
         run: |
-          python .github/scripts/resolve-release-note.py --channel Stable --github-output "$GITHUB_OUTPUT"
+          python .github/scripts/resolve-release-note.py --channel "${{ steps.channel.outputs.channel }}" --github-output "$GITHUB_OUTPUT"
           version="$(grep '^tag=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
           notes_source="$(grep '^notes_source=' "$GITHUB_OUTPUT" | tail -n 1 | cut -d= -f2-)"
 
@@ -43,7 +67,7 @@ jobs:
           fi
 
           if [ ! -f "$notes_source" ]; then
-            echo "Missing stable release notes source: $notes_source" >&2
+            echo "Missing release notes source: $notes_source" >&2
             exit 1
           fi
 
@@ -135,13 +159,8 @@ jobs:
           bash -n .github/scripts/write-release-notes.sh
           python -m py_compile .github/scripts/construct-changelog.py .github/scripts/resolve-release-note.py .github/scripts/configure-mkdocs-language.py
 
-      - name: Export package RBXM
-        shell: bash
-        run: |
-          bash .github/scripts/export-rbxm.sh
-
   create-tag:
-    name: Create protected release tag
+    name: Publish approved release
     runs-on: ubuntu-latest
     needs: validate
     environment: release
@@ -171,6 +190,16 @@ jobs:
             echo "Checked out $checked_out instead of validated commit $VALIDATED_COMMIT." >&2
             exit 1
           fi
+
+      - name: Build release package
+        shell: bash
+        env:
+          NOTES_SOURCE: ${{ needs.validate.outputs.notes_source }}
+          VALIDATED_COMMIT: ${{ needs.validate.outputs.commit_sha }}
+        run: |
+          python .github/scripts/construct-changelog.py
+          bash .github/scripts/export-rbxm.sh src .tmp/results/release/assets/Arbor.rbxm Arbor
+          bash .github/scripts/write-release-notes.sh .tmp/results/release/notes.md "$NOTES_SOURCE" "$VALIDATED_COMMIT" .tmp/results/release/assets/Arbor.rbxm
 
       - name: Push release tag
         shell: bash
@@ -210,3 +239,48 @@ jobs:
           fi
 
           echo "Created release tag $RELEASE_VERSION at $VALIDATED_COMMIT."
+
+      - name: Publish GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          RELEASE_VERSION: ${{ needs.validate.outputs.version }}
+          VALIDATED_COMMIT: ${{ needs.validate.outputs.commit_sha }}
+          PRERELEASE: ${{ needs.validate.outputs.prerelease }}
+        run: |
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "Missing RELEASE_TOKEN environment secret. Check the release environment configuration." >&2
+            exit 1
+          fi
+
+          if gh release view "$RELEASE_VERSION" >/dev/null 2>&1; then
+            echo "Deleting existing GitHub Release before replacement: $RELEASE_VERSION"
+            if ! gh release delete "$RELEASE_VERSION" --yes; then
+              echo "Failed to delete existing GitHub Release $RELEASE_VERSION. The token may lack Contents write access, authentication may have failed, or release immutability may still be enabled." >&2
+              exit 1
+            fi
+          fi
+
+          release_flags=()
+          if [ "$PRERELEASE" = "true" ]; then
+            release_flags+=(--prerelease)
+          fi
+
+          if ! gh release create "$RELEASE_VERSION" \
+            --target "$VALIDATED_COMMIT" \
+            --title "Arbor ${RELEASE_VERSION}" \
+            --notes-file .tmp/results/release/notes.md \
+            "${release_flags[@]}" \
+            .tmp/results/release/assets/Arbor.rbxm; then
+            echo "Failed to publish GitHub Release $RELEASE_VERSION. The token may lack Contents write access, authentication may have failed, or repository release rules may have rejected the request." >&2
+            exit 1
+          fi
+
+      - name: Upload release package artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Arbor-${{ needs.validate.outputs.version }}
+          path: |
+            .tmp/results/release/assets/Arbor.rbxm
+            .tmp/results/release/notes.md
+          if-no-files-found: error
