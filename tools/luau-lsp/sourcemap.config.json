@@ -1,0 +1,13 @@
+{
+  "sourceRoots": {
+    "src": "ReplicatedStorage/Shared/Packages/Arbor/src"
+  },
+  "ignoredDirectoryNames": [
+    ".git",
+    ".tmp",
+    "content",
+    "docs",
+    "release-notes",
+    "tools"
+  ]
+}

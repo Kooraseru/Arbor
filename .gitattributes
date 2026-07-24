@@ -1,0 +1,15 @@
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.rs text eol=lf
+*.luau text eol=lf
+*.lua text eol=lf
+
+# Source-only authoring and validation surfaces.
+docs export-ignore
+docs/** export-ignore
+tools export-ignore
+tools/** export-ignore
+AGENTS.md export-ignore

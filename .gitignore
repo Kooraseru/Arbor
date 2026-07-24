@@ -1,0 +1,33 @@
+# Roblox/Luau generated artifacts
+sourcemap.json
+tools/luau-lsp/generated/
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+
+# Tool caches
+tools/luau-lsp/bin/
+.vscode/
+.DS_Store
+Thumbs.db
+rokit.toml
+
+# Dependency/package manager output
+Packages/
+WallyPackages/
+pesde.lock
+wally.lock
+
+# Build/export scratch
+.generated-preview/
+dist/
+build/
+coverage/
+.github/tools/**/target/
+
+# Local/private planning and machine notes
+docs/local/
+
+# Logs
+*.log
