@@ -1,0 +1,147 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Generated publication branch to replace.
+        required: true
+        type: choice
+        options:
+          - pre-release
+          - release
+      version:
+        description: Publication version, without the leading v.
+        required: true
+        type: string
+      source_ref:
+        description: Full source commit SHA, or source for current source HEAD.
+        required: false
+        default: source
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: publish-${{ inputs.channel }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.channel }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require source workflow ref
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_NAME" != "source" ]; then
+            echo "Publish must be dispatched from source, got $GITHUB_REF_NAME." >&2
+            exit 1
+          fi
+
+      - name: Checkout selected source ref
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.source_ref }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Resolve immutable source commit
+        id: source
+        shell: bash
+        run: |
+          git fetch origin source:refs/remotes/origin/source --no-tags
+          source_commit="$(git rev-parse HEAD)"
+
+          if ! git branch -r --contains "$source_commit" | grep -Eq 'origin/source$'; then
+            echo "Selected source_ref does not resolve to a commit contained in origin/source: $source_commit" >&2
+            exit 1
+          fi
+
+          echo "commit=$source_commit" >> "$GITHUB_OUTPUT"
+          echo "Resolved source commit: $source_commit"
+
+      - name: Validate inputs
+        id: publication
+        shell: bash
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          case "$CHANNEL" in
+            pre-release|release) ;;
+            *)
+              echo "Unsupported channel: $CHANNEL" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+            echo "Version must look like 1.1.0 or 1.1.0-beta.2: $VERSION" >&2
+            exit 1
+          fi
+
+          if [ "$CHANNEL" = "release" ] && [[ "$VERSION" == *-* ]]; then
+            echo "release channel requires a stable version without a prerelease suffix: $VERSION" >&2
+            exit 1
+          fi
+
+          if [ "$CHANNEL" = "pre-release" ] && [[ "$VERSION" != *-* ]]; then
+            echo "pre-release channel requires a prerelease version suffix: $VERSION" >&2
+            exit 1
+          fi
+
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validate publish tooling
+        shell: bash
+        run: |
+          bash -n .github/scripts/build-publication-payload.sh
+          bash -n .github/scripts/export-rbxm.sh
+          bash -n .github/scripts/publish-generated-branch.sh
+          bash -n .github/scripts/test-pages-workflow.sh
+          bash -n .github/scripts/test-publish-workflow.sh
+          bash -n .github/scripts/write-release-notes.sh
+          python .github/scripts/validate-python-scripts.py
+          python .github/scripts/validate-workflow-contracts.py
+
+      - name: Build publication payload
+        shell: bash
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          VERSION: ${{ inputs.version }}
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
+        run: |
+          generated_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          bash .github/scripts/build-publication-payload.sh "$GITHUB_WORKSPACE" ".generated/repos/$CHANNEL" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "$generated_at"
+          python -m json.tool ".generated/repos/$CHANNEL/.github/publication.json" >/dev/null
+
+      - name: Replace generated branch
+        shell: bash
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
+          VERSION: ${{ inputs.version }}
+          TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -z "${TOKEN:-}" ]; then
+            echo "Missing RELEASE_TOKEN. Generated branch pushes need a token that can trigger downstream Pages workflows." >&2
+            exit 1
+          fi
+
+          publication_path="$GITHUB_WORKSPACE/.generated/repos/$CHANNEL"
+          remote_url="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          bash .github/scripts/publish-generated-branch.sh "$publication_path" "$remote_url" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "v$VERSION"

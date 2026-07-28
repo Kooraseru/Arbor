@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-output_path="${1:-.generated-preview/results/release/notes.md}"
-notes_source="${2:-release-notes/Stable/v1.0.1.md}"
+output_path="${1:-.generated/repos/release/notes.md}"
+notes_source="${2:-release-notes/v1.0.1.toml}"
 commit_sha="${3:-$(git rev-parse HEAD)}"
-rbxm_path="${4:-.generated-preview/results/release/assets/Arbor.rbxm}"
+rbxm_path="${4:-.generated/repos/release/assets/Arbor.rbxm}"
 commit_sha="$(git rev-parse "$commit_sha")"
+
+if command -v python3 >/dev/null 2>&1; then
+	python_cmd=python3
+elif command -v python >/dev/null 2>&1; then
+	python_cmd=python
+elif command -v python.exe >/dev/null 2>&1; then
+	python_cmd=python.exe
+else
+	echo "python3, python, or python.exe is required to render release notes" >&2
+	exit 1
+fi
 
 mkdir -p -- "$(dirname -- "$output_path")"
 
@@ -16,8 +27,13 @@ fi
 
 short_sha="${commit_sha:0:7}"
 
-cat > "$output_path" <<NOTES
-$(cat "$notes_source")
+"$python_cmd" .github/scripts/construct-changelog.py \
+	--release-notes-dir release-notes \
+	--content-root content \
+	--release-metadata "$notes_source" \
+	--output "$output_path"
+
+cat >> "$output_path" <<NOTES
 
 ## Additional Information
 

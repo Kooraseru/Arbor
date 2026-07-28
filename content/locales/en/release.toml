@@ -1,0 +1,22 @@
+[changelog]
+title = "Changelog"
+intro = "All notable Arbor package changes are constructed from release notes."
+empty = "No release notes have been published yet."
+stable = "Stable"
+pre_release = "Pre-release"
+
+[releases.v1_0_1]
+version = "v1.0.1"
+
+[releases.v1_0_1.sections.summary]
+kind = "prose"
+heading = "Summary"
+body = "First stable Arbor release, focused on typed access to analyzer-visible Roblox instance trees."
+
+[releases.v1_0_1.sections.changes]
+kind = "list"
+heading = "Changes"
+item_1 = "Added direct child-name and child-record helpers."
+item_2 = "Added class-filtered child helpers."
+item_3 = "Added validated loading for direct `ModuleScript` children."
+item_4 = "Added the `Arbor.rbxm` release asset."

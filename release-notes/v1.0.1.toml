@@ -1,0 +1,4 @@
+version = "v1.0.1"
+channel = "stable"
+date = "2026-07-09"
+assets = ["Arbor.rbxm"]

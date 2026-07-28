@@ -36,10 +36,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Check example fixtures and explanations
+      - name: Check source example fixtures
         shell: bash
         run: |
-          test -f content/locales/en/examples/README.md
           test -f src/examples/generated-type-facade/README.md
           test -f src/examples/plugin-sandbox/README.md
           test -f src/examples/plugin-sandbox/ServiceTypes.luau
@@ -108,10 +107,10 @@ jobs:
           rm -rf content/locales/en/wiki/assets
           cp -R content/assets content/locales/en/wiki/assets
 
-          mkdir -p .generated-preview
-          cp .github/mkdocs.yml .generated-preview/mkdocs-en.yml
-          python .github/scripts/configure-mkdocs-language.py --config .generated-preview/mkdocs-en.yml --language en --alternate-site-url https://kooraseru.github.io/Arbor/
-          mkdocs build --config-file .generated-preview/mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site"
+          mkdir -p .generated/shared
+          cp .github/mkdocs.yml .generated/shared/mkdocs-en.yml
+          python .github/scripts/configure-mkdocs-language.py --config .generated/shared/mkdocs-en.yml --language en --alternate-site-url https://kooraseru.github.io/Arbor/
+          mkdocs build --config-file .generated/shared/mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site"
 
       - name: Checkout canary branch
         uses: actions/checkout@v5
@@ -129,16 +128,16 @@ jobs:
           rm -rf content/locales/en/wiki/assets
           cp -R content/assets content/locales/en/wiki/assets
 
-          mkdir -p .generated-preview
-          cp .github/mkdocs.yml .generated-preview/mkdocs-en.yml
-          python .github/scripts/configure-mkdocs-language.py --config .generated-preview/mkdocs-en.yml --language en --site-name "Arbor Canary" --site-url https://kooraseru.github.io/Arbor/canary/ --alternate-site-url https://kooraseru.github.io/Arbor/canary/
+          mkdir -p .generated/shared
+          cp .github/mkdocs.yml .generated/shared/mkdocs-en.yml
+          python .github/scripts/configure-mkdocs-language.py --config .generated/shared/mkdocs-en.yml --language en --site-name "Arbor Canary" --site-url https://kooraseru.github.io/Arbor/canary/ --alternate-site-url https://kooraseru.github.io/Arbor/canary/
 
-      - name: Build canary docs preview
+      - name: Build canary docs
         if: hashFiles('canary/.github/mkdocs.yml') != ''
         shell: bash
         run: |
           cd canary
-          mkdocs build --config-file .generated-preview/mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site/canary"
+          mkdocs build --config-file .generated/shared/mkdocs-en.yml --site-dir "$GITHUB_WORKSPACE/_site/canary"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

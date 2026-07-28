@@ -1,0 +1,34 @@
+[pages.children]
+source = "wiki/api/children.md"
+output = "wiki/api/children.md"
+kind = "type-group"
+lifecycle = "public"
+members = ["Child", "RequiredChild", "ChildNames", "ChildNamesOfClass", "ChildRecord", "ChildTypeRecord", "ChildrenOfClass"]
+
+[pages.definitions]
+source = "wiki/api/definitions.md"
+output = "wiki/api/definitions.md"
+kind = "type-group"
+lifecycle = "public-low-level"
+members = ["Mold", "Run", "Resolve1", "Resolve2"]
+
+[pages.relations]
+source = "wiki/api/relations.md"
+output = "wiki/api/relations.md"
+kind = "type-group"
+lifecycle = "public"
+members = ["ChildOf", "IsChildOf", "AncestorOf", "IsAncestorOf", "DescendantOf", "IsDescendantOf"]
+
+[pages.runtime]
+source = "wiki/api/runtime.md"
+output = "wiki/api/runtime.md"
+kind = "runtime-group"
+lifecycle = "public"
+members = ["CollectChildren", "FindChild", "ExpectChild"]
+
+[pages.load_module_map]
+source = "wiki/api/runtime-loaders/load-module-map.md"
+output = "wiki/api/runtime-loaders/load-module-map.md"
+kind = "runtime-function"
+lifecycle = "public"
+members = ["LoadModuleMap.From", "LoadModules"]

@@ -8,7 +8,6 @@ tools/luau-lsp/generated/
 
 # Tool caches
 tools/luau-lsp/bin/
-.vscode/
 .DS_Store
 Thumbs.db
 rokit.toml
@@ -20,7 +19,8 @@ pesde.lock
 wally.lock
 
 # Build/export scratch
-.generated-preview/
+.generated/
+.generated-*/
 dist/
 build/
 coverage/

@@ -3,91 +3,84 @@ site_description: Compile-time hierarchy logic for Luau and Roblox.
 site_url: https://kooraseru.github.io/Arbor/
 repo_url: https://github.com/Kooraseru/Arbor
 repo_name: Kooraseru/Arbor
-copyright: Copyright &copy; 2026 Kooraseru. Documentation licensed under <a href="https://github.com/Kooraseru/Arbor/blob/source/content/locales/en/LICENSE">Apache-2.0</a>. Made with <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a>.
-
-docs_dir: ../content/locales/en/wiki
+copyright: Copyright &copy; 2026 Kooraseru. Documentation licensed under <a href="https://github.com/Kooraseru/Arbor/blob/source/content/repo/LICENSE">Apache-2.0</a>.
+  Made with <a href="https://squidfunk.github.io/mkdocs-material/">Material for MkDocs</a>.
+docs_dir: ../.generated/shared/content/locales/__configured__/wiki
 site_dir: ../site
 use_directory_urls: true
-
 theme:
   name: material
-  logo: ../../assets/brand/Icon.svg
-  favicon: ../../assets/brand/Icon.svg
+  logo: assets/brand/Icon.svg
+  favicon: assets/brand/Icon.svg
   features:
-    - navigation.sections
-    - navigation.path
-    - navigation.top
-    - search.suggest
-    - search.highlight
-    - content.code.copy
-    - toc.follow
+  - navigation.sections
+  - navigation.path
+  - navigation.top
+  - search.suggest
+  - search.highlight
+  - content.code.copy
+  - toc.follow
   palette:
-    - scheme: slate
-      primary: black
-      accent: cyan
+  - scheme: slate
+    primary: black
+    accent: cyan
   icon:
     repo: fontawesome/brands/github
-
+  language: en
 nav:
-  - Introduction:
-      - Overview: index.md
-      - Data Model Scope: introduction/package-scope.md
-      - Installation: install.md
-      - Quick Start: introduction/quick-start.md
-  - Core Concepts:
-      - Analyzer Model: analyzer-model.md
-      - Package Boundaries: package-boundaries.md
-      - Design Goals: core-concepts/design-goals.md
-  - API Reference:
-      - InstanceTree:
-          - Overview: api/instance-tree/index.md
-          - ChildNames: api/instance-tree/child-names.md
-          - ChildOf: api/instance-tree/child-of.md
-          - ChildRecord: api/instance-tree/child-record.md
-          - ChildrenOfClass: api/instance-tree/children-of-class.md
-          - ChildNamesOfClass: api/instance-tree/child-names-of-class.md
-  - Guides:
-      - Typing A Child Tree: guides/creating-a-package.md
-      - Exporting Packages: guides/exporting-packages.md
-      - CI Integration: export-and-ci.md
-      - Typechecking: guides/typechecking.md
-      - Best Practices: guides/best-practices.md
-  - Examples:
-      - Overview: examples.md
-      - Serialized Types: examples/serialized-types.md
-      - Plugin Sandbox: examples/plugin-sandbox.md
-      - Generated Type Facade: examples/generated-type-facade.md
-  - Reference:
-      - FAQ: faq.md
-      - Analyzer Fixtures: reference/analyzer-fixtures.md
-      - Release Notes: reference/release-notes.md
-      - Changelog: reference/changelog.md
-
+- Introduction:
+  - Overview: index.md
+  - Data Model Scope: introduction/package-scope.md
+  - Installation: install.md
+  - Quick Start: introduction/quick-start.md
+- Core Concepts:
+  - Analyzer Model: analyzer-model.md
+  - Package Boundaries: package-boundaries.md
+  - Design Goals: core-concepts/design-goals.md
+- API Reference:
+  - Overview: api/index.md
+  - Runtime Members: api/runtime.md
+  - Child Types: api/children.md
+  - Relation Types: api/relations.md
+  - Definition Runtime: api/definitions.md
+  - Runtime Loaders:
+    - Overview: api/runtime-loaders/index.md
+    - LoadModuleMap.From: api/runtime-loaders/load-module-map.md
+- Guides:
+  - Typing A Child Tree: guides/creating-a-package.md
+  - Exporting Packages: guides/exporting-packages.md
+  - Typechecking: guides/typechecking.md
+  - Best Practices: guides/best-practices.md
+- Reference:
+  - FAQ: faq.md
+  - Analyzer Fixtures: reference/analyzer-fixtures.md
+  - Release Notes: reference/release-notes.md
+  - Changelog: reference/changelog.md
 markdown_extensions:
-  - admonition
-  - attr_list
-  - def_list
-  - footnotes
-  - md_in_html
-  - meta
-  - toc:
-      permalink: true
-  - pymdownx.details
-  - pymdownx.highlight:
-      anchor_linenums: true
-  - pymdownx.inlinehilite
-  - pymdownx.snippets:
-      base_path:
-        - .
-  - pymdownx.superfences
-  - pymdownx.tabbed:
-      alternate_style: true
-
+- admonition
+- attr_list
+- def_list
+- footnotes
+- md_in_html
+- meta
+- toc:
+    permalink: true
+- pymdownx.details
+- pymdownx.highlight:
+    anchor_linenums: true
+- pymdownx.inlinehilite
+- mkdocs_extensions.api_links
+- pymdownx.snippets:
+    base_path:
+    - .
+- pymdownx.superfences
+- pymdownx.tabbed:
+    alternate_style: true
 extra_css:
-  - ../../assets/stylesheets/brand.css
-
+- assets/stylesheets/brand.css
+extra_javascript:
+- assets/javascripts/type-tooltips.js
 plugins:
-  - search
-
+- search
 extra:
   generator: false

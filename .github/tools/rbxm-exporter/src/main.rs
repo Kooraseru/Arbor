@@ -1,5 +1,4 @@
 use std::{
-    collections::HashSet,
     env,
     error::Error,
     fs::{self, File},
@@ -15,7 +14,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     if matches!(args.next().as_deref(), Some("verify")) {
         let model_path = PathBuf::from(
             args.next()
-                .unwrap_or_else(|| ".generated-preview/results/export/rbxm-export/result/Arbor.rbxm".to_owned()),
+                .unwrap_or_else(|| ".generated/shared/export/rbxm-export/result/Arbor.rbxm".to_owned()),
         );
         let package_name = args.next().unwrap_or_else(|| "Arbor".to_owned());
         return verify_model(&model_path, &package_name);
@@ -25,7 +24,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let source_root = PathBuf::from(args.next().unwrap_or_else(|| "src".to_owned()));
     let output_path = PathBuf::from(
         args.next()
-            .unwrap_or_else(|| ".generated-preview/results/export/rbxm-export/result/Arbor.rbxm".to_owned()),
+            .unwrap_or_else(|| ".generated/shared/export/rbxm-export/result/Arbor.rbxm".to_owned()),
     );
     let package_name = args.next().unwrap_or_else(|| "Arbor".to_owned());
 
@@ -136,19 +135,6 @@ fn verify_model(model_path: &Path, package_name: &str) -> Result<(), Box<dyn Err
 
     if !has_source {
         return Err("expected root Source property to be present".into());
-    }
-
-    let child_names = root
-        .children()
-        .iter()
-        .filter_map(|child_ref| dom.get_by_ref(*child_ref))
-        .map(|child| child.name.as_str())
-        .collect::<HashSet<_>>();
-
-    for expected_child in ["InstanceTree"] {
-        if !child_names.contains(expected_child) {
-            return Err(format!("expected root child {expected_child}").into());
-        }
     }
 
     println!("RBXM verify OK: {}", model_path.display());

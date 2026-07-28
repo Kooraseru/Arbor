@@ -2,116 +2,110 @@
 from __future__ import annotations
 
 import argparse
-import re
 from dataclasses import dataclass
 from pathlib import Path
 
-
-STABLE_RE = re.compile(r"^v(?P<version>\d+(?:\.\d+)*)\.md$")
-PRE_RELEASE_RE = re.compile(r"^v(?P<version>\d+(?:\.\d+)*)-(?P<label>[A-Za-z]+)\.(?P<number>\d+)\.md$")
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on Python <3.11
+    tomllib = None
 
 
 @dataclass(frozen=True)
 class ReleaseCandidate:
     tag: str
-    notes_source: Path
+    channel: str
+    metadata_source: Path
     version_parts: tuple[int, ...]
-    pre_release_number: int
+    suffix: str
     prerelease: bool
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Resolve the latest Arbor release note for a channel.")
+    parser = argparse.ArgumentParser(description="Resolve the latest Arbor release metadata.")
     parser.add_argument("--channel", choices=["Stable", "Pre-release"], required=True)
-    parser.add_argument("--stable-dir", default="release-notes/Stable")
-    parser.add_argument("--pre-release-dir", default="release-notes/Pre-release")
-    parser.add_argument("--github-output", default=None, help="Optional GITHUB_OUTPUT file to append values to.")
+    parser.add_argument("--release-notes-dir", default="release-notes")
+    parser.add_argument("--github-output", default=None)
     return parser.parse_args()
 
 
-def version_parts(version: str) -> tuple[int, ...]:
-    return tuple(int(part) for part in version.split("."))
+def load_metadata(path: Path) -> dict[str, object]:
+    if tomllib is not None:
+        with path.open("rb") as handle:
+            return tomllib.load(handle)
 
-
-def stable_candidates(directory: Path) -> list[ReleaseCandidate]:
-    candidates = []
-
-    for path in directory.glob("*.md"):
-        if path.name.casefold() == "readme.md":
+    data: dict[str, object] = {}
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
             continue
-
-        match = STABLE_RE.match(path.name)
-        if not match:
-            continue
-
-        version = match.group("version")
-        candidates.append(ReleaseCandidate(
-            tag=f"v{version}",
-            notes_source=path,
-            version_parts=version_parts(version),
-            pre_release_number=-1,
-            prerelease=False,
-        ))
-
-    return candidates
-
-
-def pre_release_candidates(directory: Path) -> list[ReleaseCandidate]:
-    candidates = []
-
-    for path in directory.glob("*.md"):
-        if path.name.casefold() == "readme.md":
-            continue
-
-        match = PRE_RELEASE_RE.match(path.name)
-        if not match:
-            continue
-
-        version = match.group("version")
-        label = match.group("label")
-        number = int(match.group("number"))
-        candidates.append(ReleaseCandidate(
-            tag=f"v{version}-{label}.{number}",
-            notes_source=path,
-            version_parts=version_parts(version),
-            pre_release_number=number,
-            prerelease=True,
-        ))
-
-    return candidates
+        key, separator, raw = stripped.partition("=")
+        if not separator:
+            raise SystemExit(f"{path}:{line_number}: expected key = value")
+        raw = raw.strip()
+        if raw.startswith('"') and raw.endswith('"'):
+            data[key.strip()] = raw[1:-1]
+        elif raw.startswith("[") and raw.endswith("]"):
+            data[key.strip()] = [
+                item.strip().strip('"')
+                for item in raw[1:-1].split(",")
+                if item.strip()
+            ]
+        else:
+            raise SystemExit(f"{path}:{line_number}: unsupported TOML value")
+    return data
 
 
-def latest_candidate(candidates: list[ReleaseCandidate], channel: str) -> ReleaseCandidate:
-    if not candidates:
-        raise SystemExit(f"No {channel} release notes found")
+def candidate(path: Path) -> ReleaseCandidate:
+    data = load_metadata(path)
+    version = data.get("version")
+    channel = data.get("channel")
+    if not isinstance(version, str) or not version.startswith("v"):
+        raise SystemExit(f"{path}: version must start with v")
+    if channel not in {"stable", "pre-release"}:
+        raise SystemExit(f"{path}: invalid channel {channel!r}")
 
-    return max(candidates, key=lambda candidate: (candidate.version_parts, candidate.pre_release_number))
+    stable, separator, suffix = version.removeprefix("v").partition("-")
+    if (channel == "pre-release") != bool(separator):
+        raise SystemExit(f"{path}: channel {channel!r} does not match version {version!r}")
+    try:
+        parts = tuple(int(part) for part in stable.split("."))
+    except ValueError as error:
+        raise SystemExit(f"{path}: invalid version {version!r}") from error
 
-
-def output_lines(candidate: ReleaseCandidate, channel: str) -> list[str]:
-    prerelease_value = "true" if candidate.prerelease else "false"
-
-    return [
-        f"tag={candidate.tag}",
-        f"channel={channel}",
-        f"notes_source={candidate.notes_source.as_posix()}",
-        f"prerelease={prerelease_value}",
-    ]
+    return ReleaseCandidate(
+        tag=version,
+        channel=channel,
+        metadata_source=path,
+        version_parts=parts,
+        suffix=suffix,
+        prerelease=bool(separator),
+    )
 
 
 def main() -> None:
     args = parse_args()
+    expected_channel = "stable" if args.channel == "Stable" else "pre-release"
+    candidates = [
+        item
+        for item in (
+            candidate(path)
+            for path in sorted(Path(args.release_notes_dir).rglob("*.toml"))
+        )
+        if item.channel == expected_channel
+    ]
+    if not candidates:
+        raise SystemExit(f"No {args.channel} release metadata found")
 
-    if args.channel == "Stable":
-        candidate = latest_candidate(stable_candidates(Path(args.stable_dir)), args.channel)
-    else:
-        candidate = latest_candidate(pre_release_candidates(Path(args.pre_release_dir)), args.channel)
-
-    lines = output_lines(candidate, args.channel)
-
+    selected = max(candidates, key=lambda item: (item.version_parts, item.suffix))
+    lines = [
+        f"tag={selected.tag}",
+        f"channel={args.channel}",
+        f"notes_source={selected.metadata_source.as_posix()}",
+        f"prerelease={'true' if selected.prerelease else 'false'}",
+    ]
     for line in lines:
         print(line)
-
     if args.github_output:
         with Path(args.github_output).open("a", encoding="utf-8") as handle:
             for line in lines:

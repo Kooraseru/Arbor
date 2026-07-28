@@ -6,12 +6,13 @@ Start with Arbor-owned context before editing:
 - `docs/knowledge/agent-workflow.md` for review, tool selection, validation,
   and stop checks
 - `docs/knowledge/branch-publication-model.md` before changing branch,
-  release, preview, Pages, or publication workflow behavior
+  release, pre-release, Pages, or publication workflow behavior
 - `docs/local/planning/roadmap.md` for private project state and leftovers,
   when present
 
-Repository-facing docs live under `docs/`. Public user-facing wiki content lives
-under `content/locales/<language>/wiki/`.
+Repository-facing docs live under `docs/`. Public user-facing content structure
+lives under `content/pages/` and `content/repo/`; locale-specific data lives
+under `content/locales/<language>/`.
 
 Do not treat `content/` as the repo rulebook. It is the localized product/wiki
 surface.

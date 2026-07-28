@@ -1,0 +1,194 @@
+name: Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - source
+      - pre-release
+      - release
+    paths:
+      - "content/**"
+      - "release-notes/**"
+      - ".github/mkdocs.yml"
+      - ".github/wiki-languages.yml"
+      - ".github/publication.json"
+      - ".github/mkdocs_extensions/**"
+      - ".github/scripts/collect-publication-manifests.py"
+      - ".github/scripts/configure-mkdocs-language.py"
+      - ".github/scripts/construct-changelog.py"
+      - ".github/scripts/run-mkdocs.py"
+      - ".github/scripts/update-readme-language-links.py"
+      - ".github/workflows/pages.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Pages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source tooling
+        uses: actions/checkout@v5
+        with:
+          ref: source
+          path: source
+          fetch-depth: 0
+          fetch-tags: false
+          persist-credentials: false
+
+      - name: Checkout release publication metadata
+        uses: actions/checkout@v5
+        continue-on-error: true
+        with:
+          ref: release
+          path: publication-release
+          fetch-depth: 1
+          fetch-tags: false
+          persist-credentials: false
+
+      - name: Checkout pre-release publication metadata
+        uses: actions/checkout@v5
+        continue-on-error: true
+        with:
+          ref: pre-release
+          path: publication-pre-release
+          fetch-depth: 1
+          fetch-tags: false
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install docs dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install mkdocs-material pyyaml
+
+      - name: Collect publication manifests
+        id: manifests
+        shell: bash
+        run: |
+          python source/.github/scripts/collect-publication-manifests.py \
+            --release-manifest publication-release/.github/publication.json \
+            --pre-release-manifest publication-pre-release/.github/publication.json \
+            --output source/.generated/shared/content/generated/publications.json \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Checkout release source revision
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.manifests.outputs.release_source_commit || 'source' }}
+          path: docs-release
+          fetch-depth: 0
+          fetch-tags: false
+          persist-credentials: false
+
+      - name: Checkout pre-release source revision
+        if: steps.manifests.outputs.pre_release_source_commit != ''
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.manifests.outputs.pre_release_source_commit }}
+          path: docs-pre-release
+          fetch-depth: 0
+          fetch-tags: false
+          persist-credentials: false
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
+      - name: Build release docs
+        shell: bash
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/_site"
+          cd docs-release
+          python .github/scripts/render-localized-content.py --output-root .generated/shared/content
+          python .github/scripts/construct-changelog.py --content-root .generated/shared/content --output .generated/shared/content/generated/CHANGELOG.md
+          mkdir -p .generated/shared/content/generated
+          cp "$GITHUB_WORKSPACE/source/.generated/shared/content/generated/publications.json" .generated/shared/content/generated/publications.json
+          mapfile -t languages < <(python .github/scripts/render-localized-content.py --content-root .generated/shared/content --list-languages)
+          default_language="${languages[0]}"
+
+          for language in "${languages[@]}"; do
+            python .github/scripts/construct-changelog.py --content-root .generated/shared/content --language "$language" --output ".generated/shared/content/locales/$language/wiki/reference/changelog.md"
+            rm -rf ".generated/shared/content/locales/$language/wiki/assets"
+            cp -R content/assets ".generated/shared/content/locales/$language/wiki/assets"
+            mkdir -p .generated/shared
+            config_path=".generated/shared/mkdocs-$language.yml"
+            cp .github/mkdocs.yml "$config_path"
+
+            site_url="https://kooraseru.github.io/Arbor/"
+            site_dir="$GITHUB_WORKSPACE/_site"
+            if [ "$language" != "$default_language" ]; then
+              site_url="https://kooraseru.github.io/Arbor/$language/"
+              site_dir="$GITHUB_WORKSPACE/_site/$language"
+            fi
+
+            python .github/scripts/configure-mkdocs-language.py --config "$config_path" --content-root .generated/shared/content --language "$language" --site-url "$site_url" --alternate-site-url https://kooraseru.github.io/Arbor/
+            export ARBOR_WIKI_LANGUAGE="$language"
+            export ARBOR_CONTENT_ROOT=".generated/shared/content"
+            python .github/scripts/run-mkdocs.py build --config-file "$config_path" --site-dir "$site_dir"
+          done
+
+      - name: Build pre-release docs
+        if: steps.manifests.outputs.pre_release_source_commit != ''
+        shell: bash
+        run: |
+          cd docs-pre-release
+          python .github/scripts/render-localized-content.py --output-root .generated/shared/content
+          python .github/scripts/construct-changelog.py --content-root .generated/shared/content --output .generated/shared/content/generated/CHANGELOG.md
+          mkdir -p .generated/shared/content/generated
+          cp "$GITHUB_WORKSPACE/source/.generated/shared/content/generated/publications.json" .generated/shared/content/generated/publications.json
+          mapfile -t languages < <(python .github/scripts/render-localized-content.py --content-root .generated/shared/content --list-languages)
+          default_language="${languages[0]}"
+
+          for language in "${languages[@]}"; do
+            python .github/scripts/construct-changelog.py --content-root .generated/shared/content --language "$language" --output ".generated/shared/content/locales/$language/wiki/reference/changelog.md"
+            rm -rf ".generated/shared/content/locales/$language/wiki/assets"
+            cp -R content/assets ".generated/shared/content/locales/$language/wiki/assets"
+            mkdir -p .generated/shared
+            config_path=".generated/shared/mkdocs-$language.yml"
+            cp .github/mkdocs.yml "$config_path"
+
+            site_url="https://kooraseru.github.io/Arbor/pre-release/"
+            site_dir="$GITHUB_WORKSPACE/_site/pre-release"
+            if [ "$language" != "$default_language" ]; then
+              site_url="https://kooraseru.github.io/Arbor/pre-release/$language/"
+              site_dir="$GITHUB_WORKSPACE/_site/pre-release/$language"
+            fi
+
+            python .github/scripts/configure-mkdocs-language.py --config "$config_path" --content-root .generated/shared/content --language "$language" --site-name "Arbor Pre-release" --site-url "$site_url" --alternate-site-url https://kooraseru.github.io/Arbor/pre-release/
+            export ARBOR_WIKI_LANGUAGE="$language"
+            export ARBOR_CONTENT_ROOT=".generated/shared/content"
+            python .github/scripts/run-mkdocs.py build --config-file "$config_path" --site-dir "$site_dir"
+          done
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+  deploy:
+    name: Deploy Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

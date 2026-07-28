@@ -1,0 +1,5 @@
+name = "Japanese"
+native_name = "日本語"
+locale = "ja"
+default = false
+fallback = ["en"]

@@ -2,269 +2,332 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - exercised on Python <3.11
+    tomllib = None
 
-FRONT_MATTER_BOUNDARY = "---"
-DATE_RE = re.compile(r"^Date:\s*(.+)$", re.MULTILINE)
-HEADING_RE = re.compile(r"^#\s+(.+)$", re.MULTILINE)
-VERSION_RE = re.compile(r"v\d+(?:\.\d+)*(?:-[A-Za-z0-9.-]+)?")
-OMITTED_CHANGELOG_SECTIONS = {"assets"}
-OMITTED_CHANGELOG_METADATA = {"channel", "date", "package", "status"}
+
+VERSION_KEY_RE = re.compile(r"[^A-Za-z0-9]+")
 
 
 @dataclass(frozen=True)
-class ReleaseNote:
+class Release:
     version: str
-    base_version: str
     channel: str
     date: str | None
+    assets: tuple[str, ...]
     path: Path
-    body: str
+
+    @property
+    def base_version(self) -> str:
+        return self.version.split("-", 1)[0]
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Construct Arbor changelog Markdown from release notes.")
-    parser.add_argument("--stable-dir", default="release-notes/Stable", help="Stable release notes directory.")
-    parser.add_argument("--pre-release-dir", default="release-notes/Pre-release", help="Pre-release notes directory.")
-    parser.add_argument("--output", default=".generated-preview/generated/CHANGELOG.md", help="Constructed Markdown output.")
+    parser = argparse.ArgumentParser(
+        description="Construct localized Arbor changelog or release-note Markdown."
+    )
+    parser.add_argument("--release-notes-dir", default="release-notes")
+    parser.add_argument("--output", default=".generated/shared/content/generated/CHANGELOG.md")
+    parser.add_argument("--content-root", default="content")
+    parser.add_argument("--language", default=None)
+    parser.add_argument(
+        "--release-version",
+        default=None,
+        help="Render one release note instead of the complete changelog.",
+    )
+    parser.add_argument(
+        "--release-metadata",
+        default=None,
+        help="Render the release whose canonical metadata is at this path.",
+    )
     return parser.parse_args()
 
 
-def strip_front_matter(text: str) -> str:
-    if not text.startswith(FRONT_MATTER_BOUNDARY):
-        return text
-
-    parts = text.split(FRONT_MATTER_BOUNDARY, 2)
-    if len(parts) != 3:
-        return text
-
-    return parts[2].lstrip()
-
-
-def version_sort_key(version: str) -> tuple[int, ...]:
-    version_text = version.removeprefix("v")
-    stable_text = version_text.split("-", 1)[0]
-    parts = []
-
-    for part in stable_text.split("."):
-        try:
-            parts.append(int(part))
-        except ValueError:
-            parts.append(0)
-
-    return tuple(parts)
+def parse_simple_value(value: str) -> object:
+    if value == "true":
+        return True
+    if value == "false":
+        return False
+    if value.startswith('"') and value.endswith('"'):
+        return json.loads(value)
+    if value.startswith("'") and value.endswith("'"):
+        return value[1:-1]
+    if value.startswith("[") and value.endswith("]"):
+        inner = value[1:-1].strip()
+        if not inner:
+            return []
+        return [parse_simple_value(part.strip()) for part in inner.split(",")]
+    raise SystemExit(f"Unsupported TOML value: {value}")
 
 
-def base_version(version: str) -> str:
-    return version.split("-", 1)[0]
+def parse_simple_toml(path: Path) -> dict:
+    root: dict[str, object] = {}
+    current = root
 
-
-def version_segment(version: str) -> str:
-    parts = version.split("-", 1)
-    if len(parts) == 1:
-        return version
-
-    return parts[1]
-
-
-def release_version(path: Path, text: str) -> str:
-    match = VERSION_RE.search(path.stem)
-    if match:
-        return match.group(0)
-
-    heading = HEADING_RE.search(text)
-    if heading:
-        match = VERSION_RE.search(heading.group(1))
-        if match:
-            return match.group(0)
-
-    raise ValueError(f"Could not determine release version for {path}")
-
-
-def release_date(text: str) -> str | None:
-    match = DATE_RE.search(text)
-    if match:
-        return match.group(1).strip()
-
-    return None
-
-
-def release_body(text: str) -> str:
-    body = strip_front_matter(text).strip()
-    return re.sub(r"^#{1,6}\s+.+\n+", "", body, count=1).strip()
-
-
-def remove_omitted_metadata(markdown: str) -> str:
-    lines = markdown.splitlines()
-
-    while lines:
-        line = lines[0]
-        if not line.strip():
-            lines.pop(0)
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(),
+        start=1,
+    ):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        if stripped.startswith("[") and stripped.endswith("]"):
+            current = root
+            for part in stripped[1:-1].split("."):
+                current = current.setdefault(part, {})  # type: ignore[assignment]
             continue
 
-        key, separator, _value = line.partition(":")
-        if separator and key.strip().casefold() in OMITTED_CHANGELOG_METADATA:
-            lines.pop(0)
-            continue
+        key, separator, value = stripped.partition("=")
+        if not separator:
+            raise SystemExit(f"{path}:{line_number}: expected key = value")
+        current[key.strip()] = parse_simple_value(value.strip())
 
-        break
-
-    return "\n".join(lines).strip()
+    return root
 
 
-def remove_omitted_sections(markdown: str) -> str:
-    lines = markdown.splitlines()
-    kept_lines = []
-    skipping = False
-    skipped_level = 0
-
-    for line in lines:
-        if line.startswith("#"):
-            marker, _, title = line.partition(" ")
-            if marker and all(character == "#" for character in marker):
-                level = len(marker)
-                section_name = title.strip().casefold()
-
-                if skipping and level <= skipped_level:
-                    skipping = False
-
-                if section_name in OMITTED_CHANGELOG_SECTIONS:
-                    skipping = True
-                    skipped_level = level
-                    continue
-
-        if not skipping:
-            kept_lines.append(line)
-
-    return "\n".join(kept_lines).strip()
+def load_toml(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    if tomllib is None:
+        return parse_simple_toml(path)
+    with path.open("rb") as handle:
+        return tomllib.load(handle)
 
 
-def demote_headings(markdown: str, levels: int) -> str:
-    lines = []
-
-    for line in markdown.splitlines():
-        if line.startswith("#"):
-            marker, _, title = line.partition(" ")
-            if marker and all(character == "#" for character in marker):
-                line = f"{'#' * (len(marker) + levels)} {title}"
-
-        lines.append(line)
-
-    return "\n".join(lines).strip()
+def deep_merge(base: dict, overlay: dict) -> dict:
+    merged = dict(base)
+    for key, value in overlay.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
 
 
-def changelog_body(note: ReleaseNote) -> str:
-    body = remove_omitted_metadata(note.body)
-    body = remove_omitted_sections(body)
-    return demote_headings(body, 1)
+def discover_locales(content_root: Path) -> tuple[dict[str, dict], str]:
+    locales = {}
+    defaults = []
+    for locale_file in sorted((content_root / "locales").glob("*/locale.toml")):
+        code = locale_file.parent.name
+        data = load_toml(locale_file)
+        locales[code] = data
+        if data.get("default") is True:
+            defaults.append(code)
+
+    if len(defaults) != 1:
+        raise SystemExit(f"Expected exactly one default locale, found {defaults or 'none'}")
+    return locales, defaults[0]
 
 
-def load_release_notes(directory: Path, channel: str) -> list[ReleaseNote]:
-    notes = []
+def locale_chain(language: str, locales: dict[str, dict]) -> list[str]:
+    if language not in locales:
+        raise SystemExit(f"Unknown locale {language!r}")
 
-    if not directory.exists():
-        return notes
-
-    for path in directory.glob("*.md"):
-        if path.name.casefold() == "readme.md":
-            continue
-
-        text = path.read_text(encoding="utf-8")
-        version = release_version(path, text)
-        notes.append(ReleaseNote(
-            version=version,
-            base_version=base_version(version),
-            channel=channel,
-            date=release_date(text),
-            path=path,
-            body=release_body(text),
-        ))
-
-    return sorted(notes, key=lambda note: version_sort_key(note.version), reverse=True)
+    chain = [language]
+    for fallback in locales[language].get("fallback", []):
+        if fallback not in locales:
+            raise SystemExit(f"Locale {language!r} references unknown fallback {fallback!r}")
+        if fallback not in chain:
+            chain.append(fallback)
+    return chain
 
 
-def group_release_notes(notes: list[ReleaseNote]) -> dict[str, list[ReleaseNote]]:
-    grouped: dict[str, list[ReleaseNote]] = {}
-
-    for note in notes:
-        grouped.setdefault(note.base_version, []).append(note)
-
-    return grouped
-
-
-def version_date(notes: list[ReleaseNote]) -> str | None:
-    stable_dates = [note.date for note in notes if note.channel == "Stable" and note.date]
-    if stable_dates:
-        return stable_dates[0]
-
-    dates = [note.date for note in notes if note.date]
-    if dates:
-        return dates[0]
-
-    return None
+def localized_release_data(
+    content_root: Path,
+    language: str,
+    locales: dict[str, dict],
+) -> dict:
+    data: dict = {}
+    for code in reversed(locale_chain(language, locales)):
+        data = deep_merge(data, load_toml(content_root / "locales" / code / "release.toml"))
+    return data
 
 
-def append_channel(lines: list[str], heading: str, notes: list[ReleaseNote], include_note_version: bool) -> None:
-    if not notes:
-        return
+def load_releases(root: Path) -> list[Release]:
+    releases = []
+    for path in sorted(root.rglob("*.toml")):
+        data = load_toml(path)
+        version = data.get("version")
+        channel = data.get("channel")
+        if not isinstance(version, str) or not version:
+            raise SystemExit(f"{path}: version must be a non-empty string")
+        if channel not in {"stable", "pre-release"}:
+            raise SystemExit(f"{path}: channel must be 'stable' or 'pre-release'")
 
-    lines.extend([f"### {heading}", ""])
+        date = data.get("date")
+        assets = data.get("assets", [])
+        if date is not None and not isinstance(date, str):
+            raise SystemExit(f"{path}: date must be a string")
+        if not isinstance(assets, list) or not all(isinstance(asset, str) for asset in assets):
+            raise SystemExit(f"{path}: assets must be an array of strings")
 
-    for note in notes:
-        if include_note_version:
-            note_heading = f"#### {version_segment(note.version)}"
-            if note.date:
-                note_heading = f"{note_heading} - {note.date}"
-            lines.extend([note_heading, ""])
+        releases.append(Release(version, channel, date, tuple(assets), path))
 
-        lines.extend([changelog_body(note), ""])
+    versions = [release.version for release in releases]
+    duplicates = sorted({version for version in versions if versions.count(version) > 1})
+    if duplicates:
+        raise SystemExit(f"Duplicate release metadata: {', '.join(duplicates)}")
+    return sorted(releases, key=lambda release: version_sort_key(release.version), reverse=True)
+
+
+def version_sort_key(version: str) -> tuple[tuple[int, ...], int, str]:
+    stable, separator, suffix = version.removeprefix("v").partition("-")
+    numbers = tuple(int(part) for part in stable.split("."))
+    return numbers, 1 if not separator else 0, suffix
+
+
+def release_key(version: str) -> str:
+    return VERSION_KEY_RE.sub("_", version).strip("_")
+
+
+def release_strings(data: dict, release: Release) -> dict:
+    releases = data.get("releases", {})
+    localized = releases.get(release_key(release.version), {}) if isinstance(releases, dict) else {}
+    if not isinstance(localized, dict):
+        localized = {}
+    if localized.get("version") != release.version:
+        raise SystemExit(
+            f"Missing localized release prose for {release.version}; "
+            f"expected releases.{release_key(release.version)} in release.toml"
+        )
+    sections = localized.get("sections", {})
+    if not isinstance(sections, dict) or not sections:
+        raise SystemExit(f"Localized release {release.version} has no sections")
+    return localized
+
+
+def render_sections(localized: dict, heading_level: int) -> list[str]:
+    lines: list[str] = []
+    sections = localized["sections"]
+    for section_id, section in sections.items():
+        if not isinstance(section, dict):
+            raise SystemExit(f"Release section {section_id} must be a table")
+        kind = section.get("kind")
+        heading = section.get("heading")
+        if kind not in {"prose", "list"} or not isinstance(heading, str):
+            raise SystemExit(f"Release section {section_id} needs kind and heading")
+
+        lines.extend([f"{'#' * heading_level} {heading}", ""])
+        if kind == "prose":
+            body = section.get("body")
+            if not isinstance(body, str) or not body:
+                raise SystemExit(f"Prose release section {section_id} needs body")
+            lines.extend([body, ""])
+        else:
+            items = [
+                (key, value)
+                for key, value in section.items()
+                if key.startswith("item_") and isinstance(value, str)
+            ]
+            if not items:
+                raise SystemExit(f"List release section {section_id} needs item_N values")
+            for _key, item in sorted(items):
+                lines.append(f"- {item}")
+            lines.append("")
+    return lines
+
+
+def changelog_labels(data: dict) -> dict[str, str]:
+    changelog = data.get("changelog", {})
+    if not isinstance(changelog, dict):
+        raise SystemExit("release.toml must contain [changelog]")
+    required = ("title", "intro", "empty", "stable", "pre_release")
+    missing = [key for key in required if not isinstance(changelog.get(key), str)]
+    if missing:
+        raise SystemExit(f"release.toml changelog is missing: {', '.join(missing)}")
+    return {key: changelog[key] for key in required}
+
+
+def render_release_note(release: Release, localized: dict, labels: dict[str, str]) -> str:
+    channel = labels["stable"] if release.channel == "stable" else labels["pre_release"]
+    lines = [f"## {release.version}", "", f"{channel}: {release.date or ''}".rstrip(), ""]
+    lines.extend(render_sections(localized, heading_level=3))
+    return "\n".join(lines).rstrip() + "\n"
+
+
+def render_changelog(releases: list[Release], data: dict) -> str:
+    labels = changelog_labels(data)
+    lines = [
+        f"# {labels['title']}",
+        "",
+        labels["intro"],
+        "",
+        "<!-- Constructed from release metadata and locale resources. Do not edit by hand. -->",
+        "",
+    ]
+    if not releases:
+        lines.extend([labels["empty"], ""])
+
+    grouped: dict[str, list[Release]] = {}
+    for release in releases:
+        grouped.setdefault(release.base_version, []).append(release)
+
+    for base in sorted(grouped, key=version_sort_key, reverse=True):
+        group = grouped[base]
+        stable = [release for release in group if release.channel == "stable"]
+        date = (stable or group)[0].date
+        heading = f"## {base}" + (f" - {date}" if date else "")
+        lines.extend([heading, ""])
+
+        for channel, label_key in (("stable", "stable"), ("pre-release", "pre_release")):
+            channel_releases = [release for release in group if release.channel == channel]
+            if not channel_releases:
+                continue
+            lines.extend([f"### {labels[label_key]}", ""])
+            for release in channel_releases:
+                if channel == "pre-release":
+                    suffix = release.version.split("-", 1)[1]
+                    lines.extend([f"#### {suffix}" + (f" - {release.date}" if release.date else ""), ""])
+                    section_level = 5
+                else:
+                    section_level = 4
+                lines.extend(render_sections(release_strings(data, release), section_level))
+
+    return "\n".join(lines).rstrip() + "\n"
 
 
 def main() -> None:
     args = parse_args()
-    stable_dir = Path(args.stable_dir)
-    pre_release_dir = Path(args.pre_release_dir)
+    content_root = Path(args.content_root)
+    locales, default_language = discover_locales(content_root)
+    language = args.language or default_language
+    data = localized_release_data(content_root, language, locales)
+    releases = load_releases(Path(args.release_notes_dir))
+
+    selected_version = args.release_version
+    if args.release_metadata:
+        metadata_path = Path(args.release_metadata).resolve()
+        metadata_matches = [release for release in releases if release.path.resolve() == metadata_path]
+        if len(metadata_matches) != 1:
+            raise SystemExit(
+                f"Expected one release for metadata {args.release_metadata!r}, "
+                f"found {len(metadata_matches)}"
+            )
+        selected_version = metadata_matches[0].version
+
+    if selected_version:
+        matches = [release for release in releases if release.version == selected_version]
+        if len(matches) != 1:
+            raise SystemExit(f"Expected one release {selected_version!r}, found {len(matches)}")
+        output = render_release_note(
+            matches[0],
+            release_strings(data, matches[0]),
+            changelog_labels(data),
+        )
+    else:
+        output = render_changelog(releases, data)
+
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    notes = [
-        *load_release_notes(stable_dir, "Stable"),
-        *load_release_notes(pre_release_dir, "Pre-release"),
-    ]
-    grouped_notes = group_release_notes(notes)
-
-    lines = [
-        "# Changelog",
-        "",
-        "All notable Arbor package changes are constructed from release notes.",
-        "",
-        "<!-- This file is constructed from release-notes/Stable/*.md and release-notes/Pre-release/*.md. Do not edit it by hand. -->",
-        "",
-    ]
-
-    if not notes:
-        lines.extend(["No release notes have been published yet.", ""])
-
-    for version in sorted(grouped_notes, key=version_sort_key, reverse=True):
-        version_notes = grouped_notes[version]
-        heading = f"## {version}"
-        date = version_date(version_notes)
-        if date:
-            heading = f"{heading} - {date}"
-
-        lines.extend([heading, ""])
-
-        stable_notes = [note for note in version_notes if note.channel == "Stable"]
-        pre_release_notes = [note for note in version_notes if note.channel == "Pre-release"]
-
-        append_channel(lines, "Stable", stable_notes, include_note_version=False)
-        append_channel(lines, "Pre-release", pre_release_notes, include_note_version=True)
-
-    output_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
-    print(f"Constructed changelog: {output_path}")
+    output_path.write_text(output, encoding="utf-8", newline="\n")
+    print(f"Constructed localized Markdown: {output_path}")
 
 
 if __name__ == "__main__":

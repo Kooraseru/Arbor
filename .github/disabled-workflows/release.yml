@@ -134,7 +134,7 @@ jobs:
         shell: bash
         run: |
           python .github/scripts/construct-changelog.py
-          test -f .generated-preview/generated/CHANGELOG.md
+          test -f .generated/shared/content/generated/CHANGELOG.md
 
       - name: Check package shape
         shell: bash
@@ -219,8 +219,8 @@ jobs:
           VALIDATED_COMMIT: ${{ needs.validate.outputs.commit_sha }}
         run: |
           python .github/scripts/construct-changelog.py
-          bash .github/scripts/export-rbxm.sh "${{ needs.validate.outputs.package_root }}" ".generated-preview/results/release/assets/${{ needs.validate.outputs.asset_name }}" "${{ needs.validate.outputs.package_name }}"
-          bash .github/scripts/write-release-notes.sh .generated-preview/results/release/notes.md "$NOTES_SOURCE" "$VALIDATED_COMMIT" ".generated-preview/results/release/assets/${{ needs.validate.outputs.asset_name }}"
+          bash .github/scripts/export-rbxm.sh "${{ needs.validate.outputs.package_root }}" ".generated/repos/release/assets/${{ needs.validate.outputs.asset_name }}" "${{ needs.validate.outputs.package_name }}"
+          bash .github/scripts/write-release-notes.sh .generated/repos/release/notes.md "$NOTES_SOURCE" "$VALIDATED_COMMIT" ".generated/repos/release/assets/${{ needs.validate.outputs.asset_name }}"
 
       - name: Push release tag
         shell: bash
@@ -290,9 +290,9 @@ jobs:
           if ! gh release create "$RELEASE_VERSION" \
             --target "$VALIDATED_COMMIT" \
             --title "Arbor ${RELEASE_VERSION}" \
-            --notes-file .generated-preview/results/release/notes.md \
+            --notes-file .generated/repos/release/notes.md \
             "${release_flags[@]}" \
-            ".generated-preview/results/release/assets/${{ needs.validate.outputs.asset_name }}"; then
+            ".generated/repos/release/assets/${{ needs.validate.outputs.asset_name }}"; then
             echo "Failed to publish GitHub Release $RELEASE_VERSION. The token may lack Contents write access, authentication may have failed, or repository release rules may have rejected the request." >&2
             exit 1
           fi
@@ -302,6 +302,6 @@ jobs:
         with:
           name: Arbor-${{ needs.validate.outputs.version }}
           path: |
-            .generated-preview/results/release/assets/${{ needs.validate.outputs.asset_name }}
-            .generated-preview/results/release/notes.md
+            .generated/repos/release/assets/${{ needs.validate.outputs.asset_name }}
+            .generated/repos/release/notes.md
           if-no-files-found: error
