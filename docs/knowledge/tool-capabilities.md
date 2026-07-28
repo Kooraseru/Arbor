@@ -73,7 +73,6 @@ Repo-owned interface:
 - VS Code task: `Publication: Test Pages Workflow`
 - VS Code task: `Publication: Test Publish Workflow`
 - `.vscode/tasks.json`
-- `.github/disabled-workflows/pages.yml` as disabled reference only
 
 Evidence:
 
@@ -91,8 +90,8 @@ Evidence:
 - local pre-release Pages artifact under `.generated/shared/pages/pre-release`
 - staged wiki source under `.generated/shared/content`
 - Roblox Creator Docs reference metadata validation output
-- publication branch payloads under `.generated/repos/pre-release` and
-  `.generated/repos/release`
+- publication branch payloads under `.generated/repo/pre-release` and
+  `.generated/repo/release`
 
 ## Facade Generation
 

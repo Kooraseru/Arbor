@@ -13,7 +13,7 @@ repo_root="$(cd -- "$script_dir/../.." && pwd)"
 output_root_path="$repo_root/$output_root"
 site_path="$output_root_path/shared/pages"
 shared_content_path="$output_root_path/shared/content"
-repos_path="$output_root_path/repos"
+repo_path="$output_root_path/repo"
 current_branch="$(git -C "$repo_root" branch --show-current)"
 local_base_url="${ARBOR_PAGES_LOCAL_BASE_URL:-http://127.0.0.1:8000/}"
 workspace_path="$(mktemp -d)"
@@ -55,7 +55,7 @@ case "$output_root_path" in
 esac
 
 rm -rf -- "$output_root_path"
-mkdir -p -- "$site_path" "$shared_content_path" "$repos_path/pre-release" "$repos_path/release"
+mkdir -p -- "$site_path" "$shared_content_path" "$repo_path/pre-release" "$repo_path/release"
 
 if ! "$python_cmd" -m mkdocs --version >/dev/null 2>&1; then
 	"$python_cmd" -m pip install mkdocs-material
@@ -95,7 +95,7 @@ export_worktree_source() {
 stage_publication_payload() {
 	local source_path="$1"
 	local lane="$2"
-	local destination="$repos_path/$lane"
+	local destination="$repo_path/$lane"
 	local version
 
 	version="local-$lane"
@@ -106,7 +106,7 @@ stage_publication_payload() {
 verify_publication_filter() {
 	local branch_path="$1"
 
-	for source_only_path in .generated .gitattributes .gitignore .vscode docs tools AGENTS.md release-notes .github/disabled-workflows .github/tools/rbxm-exporter/target .github/scripts/__pycache__; do
+	for source_only_path in .generated .gitattributes .gitignore .vscode docs tools AGENTS.md release-notes .github/tools/rbxm-exporter/target .github/scripts/__pycache__; do
 		if [ -e "$branch_path/$source_only_path" ]; then
 			echo "Generated publication output contains source-only path: $source_only_path" >&2
 			exit 1
@@ -133,7 +133,7 @@ set_site_metadata() {
 
 	branch_path="$(cd -- "$(dirname -- "$config_path")/.." && pwd)"
 	alternate_site_url="$local_base_url"
-	if [ "$branch" != "source" ]; then
+	if [ "$branch" = "pre-release" ]; then
 		alternate_site_url="${local_base_url%/}/$branch/"
 	fi
 	if [ "$language" = "en" ]; then
@@ -255,7 +255,7 @@ for branch in "${branches[@]}"; do
 		source_requested=true
 	else
 		stage_publication_payload "$source_path" "$branch"
-		echo "Staged $branch repo payload -> $repos_path/$branch"
+		echo "Staged $branch repo payload -> $repo_path/$branch"
 	fi
 done
 
@@ -278,8 +278,8 @@ if [ "$source_requested" = "true" ]; then
 	mkdir -p -- "$shared_content_path/generated"
 	cp "$branch_path/.generated/shared/content/generated/CHANGELOG.md" "$shared_content_path/generated/CHANGELOG.md"
 	"$python_cmd" "$(python_path "$repo_root/.github/scripts/collect-publication-manifests.py")" \
-		--release-manifest "$(python_path "$repos_path/release/.github/publication.json")" \
-		--pre-release-manifest "$(python_path "$repos_path/pre-release/.github/publication.json")" \
+		--release-manifest "$(python_path "$repo_path/release/.github/publication.json")" \
+		--pre-release-manifest "$(python_path "$repo_path/pre-release/.github/publication.json")" \
 		--output "$(python_path "$shared_content_path/generated/publications.json")"
 	mkdir -p -- "$branch_path/.generated/shared/content/generated"
 	cp "$shared_content_path/generated/CHANGELOG.md" "$branch_path/.generated/shared/content/generated/CHANGELOG.md"
@@ -301,7 +301,7 @@ if [ "$source_requested" = "true" ]; then
 				--output ".generated/shared/content/locales/$language/wiki/reference/changelog.md"
 		)
 		language_site_path="$(language_site_path "$site_path" "$language")"
-		build_language_docs "$branch_path" "source" "$language" "$language_site_path"
+		build_language_docs "$branch_path" "release" "$language" "$language_site_path"
 		build_language_docs "$branch_path" "pre-release" "$language" "$(language_site_path "$site_path/pre-release" "$language")"
 	done
 fi

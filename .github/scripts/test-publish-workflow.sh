@@ -7,7 +7,7 @@ source_ref="${2:-HEAD}"
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "$script_dir/../.." && pwd)"
 output_root_path="$repo_root/$output_root"
-repos_path="$output_root_path/repos"
+repo_path="$output_root_path/repo"
 shared_generated_path="$output_root_path/shared/content/generated"
 source_commit="$(git -C "$repo_root" rev-parse "$source_ref")"
 remote_path="$output_root_path/shared/test/publish-remote.git"
@@ -29,16 +29,16 @@ if ! git -C "$repo_root" branch --contains "$source_commit" --format='%(refname:
 	echo "Warning: local source_ref is not currently contained by a local source branch: $source_commit" >&2
 fi
 
-bash "$repo_root/.github/scripts/build-publication-payload.sh" "$repo_root" "$repos_path/pre-release" pre-release "1.1.0-beta.2" "$source_commit" "2026-07-27T00:00:00Z"
-bash "$repo_root/.github/scripts/build-publication-payload.sh" "$repo_root" "$repos_path/release" release "1.1.0" "$source_commit" "2026-07-27T00:00:00Z"
+bash "$repo_root/.github/scripts/build-publication-payload.sh" "$repo_root" "$repo_path/pre-release" pre-release "1.1.0-beta.2" "$source_commit" "2026-07-27T00:00:00Z"
+bash "$repo_root/.github/scripts/build-publication-payload.sh" "$repo_root" "$repo_path/release" release "1.1.0" "$source_commit" "2026-07-27T00:00:00Z"
 
 rm -rf -- "$remote_path"
 mkdir -p -- "$(dirname -- "$remote_path")"
 git -c init.defaultBranch=source init --bare "$remote_path" >/dev/null
-bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repos_path/pre-release" "$remote_path" pre-release "1.1.0-beta.2" "$source_commit" "v1.1.0-beta.2" >/dev/null
-bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repos_path/release" "$remote_path" release "1.1.0" "$source_commit" "v1.1.0" >/dev/null
-bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repos_path/pre-release" "$remote_path" pre-release "1.1.0-beta.2" "$source_commit" "v1.1.0-beta.2" >/dev/null
-bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repos_path/release" "$remote_path" release "1.1.0" "$source_commit" "v1.1.0" >/dev/null
+bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/pre-release" "$remote_path" pre-release "1.1.0-beta.2" "$source_commit" "v1.1.0-beta.2" >/dev/null
+bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/release" "$remote_path" release "1.1.0" "$source_commit" "v1.1.0" >/dev/null
+bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/pre-release" "$remote_path" pre-release "1.1.0-beta.2" "$source_commit" "v1.1.0-beta.2" >/dev/null
+bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/release" "$remote_path" release "1.1.0" "$source_commit" "v1.1.0" >/dev/null
 
 mkdir -p -- "$shared_generated_path"
 python_cmd=python3
@@ -64,22 +64,22 @@ python_path() {
 }
 
 "$python_cmd" "$(python_path "$repo_root/.github/scripts/collect-publication-manifests.py")" \
-	--release-manifest "$(python_path "$repos_path/release/.github/publication.json")" \
-	--pre-release-manifest "$(python_path "$repos_path/pre-release/.github/publication.json")" \
+	--release-manifest "$(python_path "$repo_path/release/.github/publication.json")" \
+	--pre-release-manifest "$(python_path "$repo_path/pre-release/.github/publication.json")" \
 	--output "$(python_path "$shared_generated_path/publications.json")"
 
-"$python_cmd" - "$repos_path" "$shared_generated_path/publications.json" "$source_commit" <<'PY'
+"$python_cmd" - "$repo_path" "$shared_generated_path/publications.json" "$source_commit" <<'PY'
 import json
 import sys
 from pathlib import Path
 
-repos_path = Path(sys.argv[1])
+repo_path = Path(sys.argv[1])
 publications_path = Path(sys.argv[2])
 source_commit = sys.argv[3]
 expected_root = [".github", "CHANGELOG.md", "content", "CONTRIBUTING.md", "LICENSE", "README.md", "src"]
 
 for lane, version in [("pre-release", "1.1.0-beta.2"), ("release", "1.1.0")]:
-    root = repos_path / lane
+    root = repo_path / lane
     names = sorted(path.name for path in root.iterdir())
     if names != sorted(expected_root):
         raise SystemExit(f"{lane} root mismatch: {names}")
@@ -99,7 +99,6 @@ for lane, version in [("pre-release", "1.1.0-beta.2"), ("release", "1.1.0")]:
         "content/locales/en/CONTRIBUTING.md",
         "content/locales/en/LICENSE",
         "content/locales/ja/LICENSE",
-        ".github/disabled-workflows",
         ".github/tools/rbxm-exporter/target",
         ".github/scripts/__pycache__",
         "release-notes",
@@ -170,7 +169,6 @@ for lane, tag, version in [("pre-release", "v1.1.0-beta.2", "1.1.0-beta.2"), ("r
         "AGENTS.md",
         "docs",
         "tools",
-        ".github/disabled-workflows",
         ".github/tools/rbxm-exporter/target",
         ".github/scripts/__pycache__",
     ]:

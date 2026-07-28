@@ -149,9 +149,8 @@ sourceCommit
 
 Generated publication payloads are whitelist-built from source-owned inputs.
 Source-only authoring surfaces such as `.generated/`, `.vscode/`, `docs/`,
-`tools/`, `.gitignore`, `.gitattributes`, `AGENTS.md`, disabled workflow
-references, Python caches, and Rust build output do not appear in pre-release
-or release branch output.
+`tools/`, `.gitignore`, `.gitattributes`, `AGENTS.md`, Python caches, and Rust
+build output do not appear in pre-release or release branch output.
 
 ## Generated Layout
 
@@ -163,7 +162,7 @@ sections:
   shared/
     pages/
     content/
-  repos/
+  repo/
     pre-release/
     release/
 ```
@@ -173,7 +172,7 @@ sections:
 `shared/content/` is the wiki source used for that website, including localized
 content and required assets.
 
-`repos/pre-release/` and `repos/release/` contain the files that would appear on
+`repo/pre-release/` and `repo/release/` contain the files that would appear on
 the generated publication branches. Pages are not authored there; Pages are
 constructed by `source`.
 

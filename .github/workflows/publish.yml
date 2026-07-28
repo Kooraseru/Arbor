@@ -123,8 +123,8 @@ jobs:
           SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
         run: |
           generated_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-          bash .github/scripts/build-publication-payload.sh "$GITHUB_WORKSPACE" ".generated/repos/$CHANNEL" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "$generated_at"
-          python -m json.tool ".generated/repos/$CHANNEL/.github/publication.json" >/dev/null
+          bash .github/scripts/build-publication-payload.sh "$GITHUB_WORKSPACE" ".generated/repo/$CHANNEL" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "$generated_at"
+          python -m json.tool ".generated/repo/$CHANNEL/.github/publication.json" >/dev/null
 
       - name: Replace generated branch
         shell: bash
@@ -139,7 +139,7 @@ jobs:
             exit 1
           fi
 
-          publication_path="$GITHUB_WORKSPACE/.generated/repos/$CHANNEL"
+          publication_path="$GITHUB_WORKSPACE/.generated/repo/$CHANNEL"
           remote_url="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
           git config --global user.name "github-actions[bot]"

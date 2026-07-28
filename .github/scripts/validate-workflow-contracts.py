@@ -23,6 +23,7 @@ def main() -> None:
     require(publish, r"git fetch origin source:refs/remotes/origin/source", "Publish source branch containment fetch")
     require(publish, r"git branch -r --contains \"\$source_commit\"", "Publish source commit containment check")
     require(publish, r"build-publication-payload\.sh", "Publish shared payload builder")
+    require(publish, r"\.generated/repo/\$CHANNEL", "Publish generated branch payload path")
     require(publish, r"publish-generated-branch\.sh", "Publish shared branch/tag publisher")
     require(publish, r"TOKEN: \$\{\{ secrets\.RELEASE_TOKEN \}\}", "Publish requires RELEASE_TOKEN")
     if "github.token" in publish:

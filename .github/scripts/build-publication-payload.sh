@@ -51,7 +51,6 @@ for publication_dir in .github content src; do
 done
 
 rm -rf -- \
-	"$destination/.github/disabled-workflows" \
 	"$destination/.github/tools/rbxm-exporter/target" \
 	"$destination/.github/scripts/__pycache__"
 
@@ -120,7 +119,7 @@ with open(output_path, "w", encoding="utf-8", newline="\n") as output_file:
     output_file.write("\n")
 PY
 
-for source_only_path in .generated .gitattributes .gitignore .vscode docs tools AGENTS.md release-notes .github/disabled-workflows .github/tools/rbxm-exporter/target .github/scripts/__pycache__; do
+for source_only_path in .generated .gitattributes .gitignore .vscode docs tools AGENTS.md release-notes .github/tools/rbxm-exporter/target .github/scripts/__pycache__; do
 	if [ -e "$destination/$source_only_path" ]; then
 		echo "Generated publication output contains source-only path: $source_only_path" >&2
 		exit 1

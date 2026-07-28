@@ -8,8 +8,8 @@ Branch ownership is defined in
 Local publication outputs are staged under `.generated/` and use the same
 payload builder as the publish workflow. Source-only authoring surfaces such as
 `.generated/`, `.vscode/`, `docs/`, `tools/`, `.gitignore`, `.gitattributes`,
-`AGENTS.md`, disabled workflow references, Python caches, and Rust build output
-are excluded from generated pre-release/release shapes.
+`AGENTS.md`, Python caches, and Rust build output are excluded from generated
+pre-release/release shapes.
 
 ## Active Publish Workflow
 
@@ -64,50 +64,9 @@ publication manifests, generated repo shape, generated branch commits, version
 tag creation/replacement, commit provenance, and collected Pages publication
 state against a temporary local Git remote.
 
-Legacy workflows were moved out of `.github/workflows/` and into
-`.github/disabled-workflows/` so they cannot run while Arbor's publication model
-is being redesigned.
+## Active Pages Workflow
 
-Keep the disabled files as reference only. Do not re-enable them until they are
-rewritten for the `source`/`pre-release`/`release` model.
-
-## Disabled Release Reference
-
-`.github/disabled-workflows/release.yml`
-
-Builds the release package, creates or replaces the protected release tag, and
-publishes the GitHub Release after validation and manual approval.
-
-Current redesign target:
-
-- `source` owns authoring inputs.
-- generated publication output may be emitted to `pre-release` or `release`.
-- `release-notes/` uses a version-shaped tree for release communication
-  inputs.
-
-Order:
-
-1. Resolve the current release note for the branch channel.
-2. Validate package shape, examples shape, and changelog construction.
-3. Wait for the `release` environment approval.
-4. Build `Arbor.rbxm` and release notes from the validated commit.
-5. Use `RELEASE_TOKEN` to replace the protected tag at the validated commit.
-6. Use `RELEASE_TOKEN` to publish the GitHub Release with `Arbor.rbxm`.
-7. Upload the release package artifact for the workflow run.
-
-`RELEASE_TOKEN` is only used after approval.
-
-## Disabled Pages Reference
-
-`.github/disabled-workflows/pages.yml`
-
-Historical reference for the public documentation site.
-
-Active Pages automation lives at:
-
-```text
 .github/workflows/pages.yml
-```
 
 It reads `.github/publication.json` from `release` and `pre-release`, checks out
 the recorded source commits, and builds:

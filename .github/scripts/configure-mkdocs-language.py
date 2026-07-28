@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 from copy import deepcopy
 from pathlib import Path
 from urllib.parse import urljoin
@@ -105,16 +106,19 @@ def configure(
     registry: dict,
     language_code: str,
     content_root: Path,
+    config_path: Path,
     site_url: str | None,
     site_name: str | None,
     alternate_site_url: str | None,
 ) -> dict:
     default_language = discover_default_language(content_root)
     language = load_locale(content_root, language_code)
-    content_dir = f"{content_root.as_posix()}/locales/{language_code}/wiki"
+    content_dir_path = content_root / "locales" / language_code / "wiki"
+    content_dir = content_dir_path.as_posix()
+    docs_dir = os.path.relpath(content_dir_path, start=config_path.parent).replace(os.sep, "/")
     configured = deepcopy(config)
 
-    configured["docs_dir"] = f"../{content_dir}"
+    configured["docs_dir"] = docs_dir
     configured["site_url"] = site_url or f"https://kooraseru.github.io/Arbor/{'' if language_code == default_language else language_code + '/'}"
     if site_name:
         configured["site_name"] = site_name
@@ -163,7 +167,7 @@ def main() -> None:
     content_root = Path(args.content_root)
     language_code = args.language or discover_default_language(content_root)
 
-    configured = configure(config, registry, language_code, content_root, args.site_url, args.site_name, args.alternate_site_url)
+    configured = configure(config, registry, language_code, content_root, config_path, args.site_url, args.site_name, args.alternate_site_url)
     write_yaml(config_path, configured)
 
 

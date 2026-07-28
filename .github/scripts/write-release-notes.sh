@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-output_path="${1:-.generated/repos/release/notes.md}"
+output_path="${1:-.generated/repo/release/notes.md}"
 notes_source="${2:-release-notes/v1.0.1.toml}"
 commit_sha="${3:-$(git rev-parse HEAD)}"
-rbxm_path="${4:-.generated/repos/release/assets/Arbor.rbxm}"
+rbxm_path="${4:-.generated/repo/release/assets/Arbor.rbxm}"
 commit_sha="$(git rev-parse "$commit_sha")"
 
 if command -v python3 >/dev/null 2>&1; then
