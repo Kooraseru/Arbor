@@ -15,14 +15,13 @@ pre-release/release shapes.
 
 `.github/workflows/publish.yml`
 
-Publishes exactly one generated branch from a selected source commit.
+Publishes exactly one generated branch from current `source`.
 It must be dispatched from the `source` branch.
 
 Manual inputs:
 
 - `channel`: `pre-release` or `release`
-- `version`: publication version without the leading `v`
-- `source_ref`: full source commit SHA, or `source` for current source HEAD
+- `version`: release note version without the leading `v`
 
 Required secret:
 
@@ -34,8 +33,8 @@ Required secret:
 Order:
 
 1. Reject dispatches not started from `source`.
-2. Check out the selected source ref.
-3. Resolve it to a full source commit SHA.
+2. Check out `source`.
+3. Resolve current source HEAD to a full source commit SHA.
 4. Verify that SHA belongs to `origin/source`.
 5. Build the generated publication payload with
    `.github/scripts/build-publication-payload.sh`.
@@ -50,7 +49,7 @@ Order:
 Local simulation:
 
 ```bash
-bash .github/scripts/test-publish-workflow.sh .generated HEAD
+bash .github/scripts/test-publish-workflow.sh .generated
 ```
 
 VS Code task:

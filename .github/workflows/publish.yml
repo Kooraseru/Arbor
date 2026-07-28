@@ -11,14 +11,11 @@ on:
           - pre-release
           - release
       version:
-        description: Publication version, without the leading v.
+        description: Release note version to publish, without the leading v.
         required: true
-        type: string
-      source_ref:
-        description: Full source commit SHA, or source for current source HEAD.
-        required: false
-        default: source
-        type: string
+        type: choice
+        options:
+          - 1.0.1
 
 permissions:
   contents: write
@@ -43,10 +40,10 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout selected source ref
+      - name: Checkout source
         uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.source_ref }}
+          ref: source
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: false
@@ -59,7 +56,7 @@ jobs:
           source_commit="$(git rev-parse HEAD)"
 
           if ! git branch -r --contains "$source_commit" | grep -Eq 'origin/source$'; then
-            echo "Selected source_ref does not resolve to a commit contained in origin/source: $source_commit" >&2
+            echo "Checked out source HEAD is not contained in origin/source: $source_commit" >&2
             exit 1
           fi
 
@@ -86,13 +83,8 @@ jobs:
             exit 1
           fi
 
-          if [ "$CHANNEL" = "release" ] && [[ "$VERSION" == *-* ]]; then
-            echo "release channel requires a stable version without a prerelease suffix: $VERSION" >&2
-            exit 1
-          fi
-
-          if [ "$CHANNEL" = "pre-release" ] && [[ "$VERSION" != *-* ]]; then
-            echo "pre-release channel requires a prerelease version suffix: $VERSION" >&2
+          if [ ! -f "release-notes/v$VERSION.toml" ]; then
+            echo "No release note exists for v$VERSION. Add release-notes/v$VERSION.toml before publishing." >&2
             exit 1
           fi
 

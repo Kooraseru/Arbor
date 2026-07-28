@@ -10,7 +10,7 @@
     {
       "label": "Publication: Test Publish Workflow",
       "type": "shell",
-      "command": "bash .github/scripts/test-publish-workflow.sh .generated HEAD",
+      "command": "bash .github/scripts/test-publish-workflow.sh .generated",
       "problemMatcher": []
     }
   ]

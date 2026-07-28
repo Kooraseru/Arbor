@@ -101,15 +101,14 @@ The manual `Publish` workflow accepts:
 
 ```text
 channel: pre-release | release
-version: string
-source_ref: full source commit SHA, or source for current source HEAD
+version: release note version choice, without leading v
 ```
 
-The workflow resolves `source_ref` to a full immutable source commit SHA before
-building and uses that resolved SHA for the entire run.
+The workflow checks out `source`, resolves current source HEAD to a full
+immutable source commit SHA before building, and uses that resolved SHA for the
+entire run.
 
-The publish workflow must be dispatched from `source`, even when `source_ref`
-names an older source commit.
+The publish workflow must be dispatched from `source`.
 
 Publishing requires `RELEASE_TOKEN`. Do not fall back to the default
 `github.token`; generated branch pushes must be able to trigger the Pages

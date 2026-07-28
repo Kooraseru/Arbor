@@ -10,18 +10,37 @@ def require(text: str, pattern: str, description: str, *, flags: int = 0) -> Non
         raise SystemExit(f"Workflow contract missing: {description}")
 
 
+def workflow_choice_options(text: str, input_name: str) -> list[str]:
+    match = re.search(rf"^\s{{6}}{re.escape(input_name)}:\n(?P<body>(?:^\s{{8,}}.*\n)+)", text, re.MULTILINE)
+    if not match:
+        raise SystemExit(f"Workflow contract missing: {input_name} input")
+
+    return re.findall(r"^\s{10}-\s+(.+?)\s*$", match.group("body"), re.MULTILINE)
+
+
 def main() -> None:
     publish = Path(".github/workflows/publish.yml").read_text(encoding="utf-8")
     pages = Path(".github/workflows/pages.yml").read_text(encoding="utf-8")
     generated_branch_publisher = Path(".github/scripts/publish-generated-branch.sh").read_text(encoding="utf-8")
+    release_note_versions = sorted(path.stem.removeprefix("v") for path in Path("release-notes").glob("v*.toml"))
 
     require(publish, r"name:\s+Publish", "Publish workflow name")
     require(publish, r"workflow_dispatch:", "Publish manual dispatch")
     require(publish, r"channel:\s*\n(?:.*\n){0,8}\s+- pre-release\s*\n\s+- release", "Publish channel choices")
-    require(publish, r"source_ref:", "Publish source_ref input")
+    require(publish, r"version:\s*\n(?:.*\n){0,8}\s+type:\s+choice", "Publish version dropdown")
+    version_choices = workflow_choice_options(publish, "version")
+    if version_choices != release_note_versions:
+        raise SystemExit(
+            "Workflow contract violation: Publish version choices must match "
+            f"release-notes/v*.toml; expected {release_note_versions}, got {version_choices}"
+        )
+    if "source_ref" in publish:
+        raise SystemExit("Workflow contract violation: Publish must not expose source_ref")
+    require(publish, r"ref:\s+source", "Publish checks out source directly")
     require(publish, r"if \[ \"\$GITHUB_REF_NAME\" != \"source\" \]", "Publish source dispatch guard")
     require(publish, r"git fetch origin source:refs/remotes/origin/source", "Publish source branch containment fetch")
     require(publish, r"git branch -r --contains \"\$source_commit\"", "Publish source commit containment check")
+    require(publish, r"release-notes/v\$VERSION\.toml", "Publish selected version must have release notes")
     require(publish, r"build-publication-payload\.sh", "Publish shared payload builder")
     require(publish, r"\.generated/repo/\$CHANNEL", "Publish generated branch payload path")
     require(publish, r"publish-generated-branch\.sh", "Publish shared branch/tag publisher")
