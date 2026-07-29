@@ -220,6 +220,31 @@ def copy_tree(
     return used
 
 
+def render_repo_files(content_root: Path, output_locale_root: Path, locale: Locale, strings: dict[str, str]) -> set[str]:
+    used: set[str] = set()
+    repo_root = content_root / "repo"
+
+    readme_template = repo_root / "README.md"
+    if readme_template.exists():
+        rendered, path_used = render_template(readme_template.read_text(encoding="utf-8"), strings, readme_template)
+        destination = output_locale_root / "README.md"
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(rendered, encoding="utf-8", newline="\n")
+        used.update(path_used)
+
+    if locale.default:
+        for name in ("CONTRIBUTING.md",):
+            source = repo_root / name
+            if source.exists():
+                destination = output_locale_root / name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                rendered, path_used = render_template(source.read_text(encoding="utf-8"), strings, source)
+                destination.write_text(rendered, encoding="utf-8", newline="\n")
+                used.update(path_used)
+
+    return used
+
+
 def render_api_pages(
     content_root: Path,
     output_locale_root: Path,
@@ -305,7 +330,7 @@ def render_locale(
             excluded=api_sources,
         )
     )
-    used.update(copy_tree(content_root / "repo", output_locale_root, strings))
+    used.update(render_repo_files(content_root, output_locale_root, locale, strings))
 
     locale_license = output_locale_root / "LICENSE"
     if locale_license.exists():

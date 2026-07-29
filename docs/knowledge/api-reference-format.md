@@ -123,12 +123,10 @@ return row instead of burying the shape in prose.
 
 Code samples belong with the member they demonstrate.
 
-Do not maintain a separate public Examples section for API samples. Source
-fixtures may still live under `src/examples/` for analyzer validation and may
-provide the source material for member-local code samples.
+Do not maintain a separate public Examples section for API samples. Keep code
+samples aligned with member-local docs and source that actually exists.
 
-Code samples should be short, focused, and aligned with real Arbor source
-fixtures or supported usage.
+Code samples should be short, focused, and aligned with supported usage.
 
 ## Compatibility Pages
 

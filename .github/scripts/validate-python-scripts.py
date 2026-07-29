@@ -16,6 +16,9 @@ DEFAULT_PATHS = [
     ".github/scripts/validate-python-scripts.py",
     ".github/scripts/validate-workflow-contracts.py",
     ".github/mkdocs_extensions/api_links.py",
+    "tools/generate-facade.py",
+    "tools/test-generate-facade.py",
+    "tools/luau-lsp/scripts/generate-sourcemap.py",
 ]
 
 

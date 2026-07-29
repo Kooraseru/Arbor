@@ -39,30 +39,17 @@ The full branch ownership model lives in
 
 ## Validation
 
-Run focused validation before proposing a change:
+Repository validation is owned by `.github/workflows/validate.yml`.
 
-```powershell
-bash -n .github/scripts/write-release-notes.sh
-bash -n .github/scripts/export-rbxm.sh
-bash -n .github/scripts/test-pages-workflow.sh
-bash -n .github/scripts/test-publish-workflow.sh
-python .github/scripts/construct-changelog.py
-python .github/scripts/resolve-release-note.py --channel Stable
-python .github/scripts/validate-python-scripts.py
-python .github/scripts/validate-workflow-contracts.py
-powershell -ExecutionPolicy Bypass -File .github/scripts/analyze-luau.ps1
-bash .github/scripts/export-rbxm.sh
-bash .github/scripts/test-publish-workflow.sh .generated HEAD
-python .github/scripts/run-mkdocs.py build --config-file .github/mkdocs.yml --site-dir .generated/shared/pages
-bash .github/scripts/test-pages-workflow.sh .generated source pre-release release
-git diff --check
-```
+Do not add local-only validation scripts. If a check matters, add it as a
+workflow stage first, then run the same command locally when needed.
 
 The checked-in analyzer wrapper runs `luau-lsp analyze` as a CLI check using
 `tools/luau-lsp/analyze-settings.json`, the generated sourcemap, and Roblox
 global types.
 
-For repository CI, mirror these checks with paths relative to the package root.
+The current validation stages are tooling contracts, package build,
+documentation build, and Luau analysis.
 
 ## Releases
 

@@ -9,9 +9,12 @@ if (-not (Test-Path -LiteralPath $analyzeScript)) {
 
 $targets = @(
 	"src/arbor@1.1.0/init.luau",
-	"src/examples/serialized-types/IdentifyType.luau",
-	"src/examples/serialized-types/CheckRelations.luau",
-	"src/examples/plugin-sandbox/ServiceTypes.luau"
+	"src/arbor@1.1.0/Definitions/TypeFunctions/Children/Names/ChildNames.luau",
+	"src/arbor@1.1.0/Definitions/TypeFunctions/Children/Records/ChildRecord.luau",
+	"src/arbor@1.1.0/Definitions/TypeFunctions/Children/Checks/IsChildOf.luau",
+	"src/arbor@1.1.0/Definitions/TypeFunctions/Ancestors/Checks/IsAncestorOf.luau",
+	"src/arbor@1.1.0/Definitions/TypeFunctions/Descendants/Checks/IsDescendantOf.luau",
+	"src/arbor@1.1.0/RuntimeLoaders/LoadModuleMap.luau"
 )
 
 Push-Location $arborRoot
@@ -25,4 +28,4 @@ finally {
 	Pop-Location
 }
 
-Write-Host "Luau analyzer pass OK: Arbor source-tree examples via tools/luau-lsp"
+Write-Host "Luau analyzer pass OK: Arbor package source via tools/luau-lsp"

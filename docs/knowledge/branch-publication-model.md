@@ -216,13 +216,7 @@ Pages does not merge `pre-release` into `release`, and it does not treat
 generated branches as authoring sources. The generated branches identify which
 source revisions are current for each publication channel.
 
-Local publication testing is part of the source system. Run the VS Code task
-`Publication: Test Pages Workflow` or:
-
-```bash
-bash .github/scripts/test-pages-workflow.sh .generated source pre-release release
-```
-
-The local test writes generated output under `.generated/`.
-It stages both generated repo lanes, collects publication manifests, builds the
-site root, and builds the pre-release site under `.generated/shared/pages/pre-release/`.
+Pages validation is owned by `.github/workflows/pages.yml`. Do not add a
+separate local Pages test harness. Shared stages should be runnable with the
+same commands used by the workflow; GitHub-dependent deployment stages should
+skip cleanly outside GitHub.

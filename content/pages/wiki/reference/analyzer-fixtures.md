@@ -16,9 +16,9 @@ title: {{wiki.reference.analyzer_fixtures.title}}
 
 | {{wiki.reference.analyzer_fixtures.fixture_column}} | {{wiki.reference.analyzer_fixtures.claim_column}} |
 | --- | --- |
-| `src/examples/serialized-types/IdentifyType.luau` | {{wiki.reference.analyzer_fixtures.identify_type_claim}} |
-| `src/examples/serialized-types/CheckRelations.luau` | {{wiki.reference.analyzer_fixtures.check_relations_claim}} |
-| `src/examples/plugin-sandbox/` | {{wiki.reference.analyzer_fixtures.plugin_sandbox_claim}} |
+| `src/arbor@1.1.0/Definitions/TypeFunctions/Children/Names/ChildNames.luau` | {{wiki.reference.analyzer_fixtures.identify_type_claim}} |
+| `src/arbor@1.1.0/Definitions/TypeFunctions/Children/Checks/IsChildOf.luau` | {{wiki.reference.analyzer_fixtures.check_relations_claim}} |
+| `src/plugin/` | {{wiki.reference.analyzer_fixtures.plugin_sandbox_claim}} |
 | {{wiki.reference.analyzer_fixtures.generated_payload_fixture}} | {{wiki.reference.analyzer_fixtures.generated_payload_claim}} |
 
 ## {{wiki.reference.analyzer_fixtures.required_checks_heading}}
@@ -40,8 +40,6 @@ powershell -ExecutionPolicy Bypass -File .github\scripts\analyze-luau.ps1
 {{wiki.reference.analyzer_fixtures.focused_lane}}
 
 ```txt
-src/examples/serialized-types/IdentifyType.luau
-src/examples/serialized-types/CheckRelations.luau
 src/arbor@1.1.0/init.luau
 src/arbor@1.1.0/Definitions/TypeFunctions/**/*.luau
 src/arbor@1.1.0/RuntimeLoaders/*.luau

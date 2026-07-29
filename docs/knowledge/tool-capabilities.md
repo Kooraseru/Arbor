@@ -23,6 +23,7 @@ Use when:
 
 Repo-owned interface:
 
+- `.github/workflows/validate.yml`
 - `tools/luau-lsp/analyze.ps1`
 - `tools/luau-lsp/analyze.sh`
 - `tools/luau-lsp/analyze.fish`
@@ -54,6 +55,7 @@ Use when:
 
 Repo-owned interface:
 
+- `.github/workflows/validate.yml`
 - `.github/workflows/publish.yml`
 - `.github/workflows/pages.yml`
 - `.github/scripts/render-localized-content.py`
@@ -65,30 +67,19 @@ Repo-owned interface:
 - `.github/scripts/validate-python-scripts.py`
 - `.github/scripts/validate-workflow-contracts.py`
 - `.github/mkdocs_extensions/api_links.py`
-- `.github/scripts/test-publish-workflow.sh`
 - `.github/mkdocs.yml`
 - `.github/wiki-languages.yml`
 - `.github/scripts/configure-mkdocs-language.py`
-- `.github/scripts/test-pages-workflow.sh`
-- VS Code task: `Publication: Test Pages Workflow`
-- VS Code task: `Publication: Test Publish Workflow`
-- `.vscode/tasks.json`
 
 Evidence:
 
 - generated or configured MkDocs output
-- pages workflow script output
 - publication metadata under `.github/publication.json`
 - collected publication metadata under
   `.generated/shared/content/generated/publications.json`
-- local publish simulation output
-- temporary local Git remote branch/tag creation and replacement verification
 - workflow contract validation output
 - Python syntax validation output without bytecode caches
 - broken-link/path failures when present
-- local Pages artifact under `.generated/shared/pages`
-- local pre-release Pages artifact under `.generated/shared/pages/pre-release`
-- staged wiki source under `.generated/shared/content`
 - Roblox Creator Docs reference metadata validation output
 - publication branch payloads under `.generated/repo/pre-release` and
   `.generated/repo/release`
@@ -106,11 +97,12 @@ Use when:
 
 Repo-owned interface:
 
+- `.github/workflows/validate.yml`
 - `tools/generate-facade.py`
 - `tools/test-generate-facade.py`
 - `tools/lune/generate-root-facade.luau`
 
 Evidence:
 
-- test output
+- Validate workflow facade generation stage output
 - generated diff or no-diff confirmation

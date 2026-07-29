@@ -42,7 +42,7 @@ cat >> "$output_path" <<NOTES
 - Package model: \`Arbor.rbxm\`
 - Package root: \`ModuleScript Arbor\`
 - Package source: \`src/\`
-- Examples are not bundled into the RBXM export; they remain repository fixtures.
+- Repository-only source is not bundled into the RBXM export.
 NOTES
 
 if [ -f "$rbxm_path" ]; then

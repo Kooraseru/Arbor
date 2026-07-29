@@ -21,6 +21,7 @@ def workflow_choice_options(text: str, input_name: str) -> list[str]:
 def main() -> None:
     publish = Path(".github/workflows/publish.yml").read_text(encoding="utf-8")
     pages = Path(".github/workflows/pages.yml").read_text(encoding="utf-8")
+    validate = Path(".github/workflows/validate.yml").read_text(encoding="utf-8")
     generated_branch_publisher = Path(".github/scripts/publish-generated-branch.sh").read_text(encoding="utf-8")
     release_note_versions = sorted(path.stem.removeprefix("v") for path in Path("release-notes").glob("v*.toml"))
 
@@ -60,7 +61,7 @@ def main() -> None:
     require(publish, r"name:\s+Create or update GitHub Release", "Publish creates or updates GitHub Release")
     require(publish, r"GENERATED_COMMIT: \$\{\{ steps\.generated\.outputs\.generated_commit \}\}", "Publish consumes generated branch commit")
     require(publish, r"release_label_args=\(\)", "Publish selects GitHub Release label arguments")
-    require(publish, r"release_label_args=\(--prerelease\)", "Publish labels pre-release GitHub Releases")
+    require(publish, r"release_label_args=\(--prerelease --latest=false\)", "Publish labels pre-release GitHub Releases and prevents latest")
     require(publish, r"release_label_args=\(--latest\)", "Publish labels stable GitHub Releases as latest")
     require(publish, r"export-rbxm\.sh src/arbor@1\.1\.0", "Publish exports versioned Arbor package root")
     require(publish, r"gh release edit \"\$tag\"", "Publish edits existing GitHub Release")
@@ -100,6 +101,22 @@ def main() -> None:
     require(pages, r"steps\.manifests\.outputs\.pre_release_source_commit != ''", "Pages pre-release manifest guard")
     require(pages, r"site_dir=\"\$GITHUB_WORKSPACE/_site/pre-release\"", "Pages pre-release default language output")
     require(pages, r"site_dir=\"\$GITHUB_WORKSPACE/_site/pre-release/\$language\"", "Pages pre-release localized language output")
+
+    require(validate, r"name:\s+Validate", "Validate workflow name")
+    require(validate, r"pull_request:", "Validate runs for pull requests")
+    require(validate, r"push:\s*\n\s+branches:\s*\n\s+- source", "Validate runs for source pushes")
+    require(validate, r"name:\s+Tooling Contracts", "Validate tooling stage")
+    require(validate, r"name:\s+Package Build", "Validate package build stage")
+    require(validate, r"name:\s+Documentation Build", "Validate documentation build stage")
+    require(validate, r"name:\s+Luau Analysis", "Validate Luau analysis stage")
+    require(validate, r"python tools/test-generate-facade\.py", "Validate owns facade generation tests")
+    require(validate, r"python \.github/scripts/validate-python-scripts\.py", "Validate owns Python syntax validation")
+    require(validate, r"python \.github/scripts/validate-workflow-contracts\.py", "Validate owns workflow contract validation")
+    require(validate, r"bash \.github/scripts/export-rbxm\.sh src/arbor@1\.1\.0", "Validate owns package export validation")
+    require(validate, r"python \.github/scripts/run-mkdocs\.py build", "Validate owns docs build validation")
+    require(validate, r"\.github/scripts/analyze-luau\.ps1", "Validate owns Luau analyzer validation")
+    if "ref: source" in validate:
+        raise SystemExit("Workflow contract violation: Validate must check the current commit, not hardcoded source")
 
     print("Workflow contracts OK")
 

@@ -53,4 +53,3 @@ of contents for every wiki page.
 | Authoring/facade generation | `src/arbor@1.1.0/Authoring/` | Source-side facade generation behavior. |
 | Definition DSL and type functions | `src/arbor@1.1.0/Definitions/` | Type-function/tag contracts. |
 | Studio plugin | `src/plugin/` | Plugin discovery, toolbar, preferences, diagnostics, and generation behavior. |
-| Source examples | `src/examples/` | Analyzer fixtures and runnable examples. |

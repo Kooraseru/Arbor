@@ -121,8 +121,6 @@ jobs:
           bash -n .github/scripts/build-publication-payload.sh
           bash -n .github/scripts/export-rbxm.sh
           bash -n .github/scripts/publish-generated-branch.sh
-          bash -n .github/scripts/test-pages-workflow.sh
-          bash -n .github/scripts/test-publish-workflow.sh
           bash -n .github/scripts/write-release-notes.sh
           python .github/scripts/validate-python-scripts.py
           python .github/scripts/validate-workflow-contracts.py
@@ -191,7 +189,7 @@ jobs:
           release_label_args=()
 
           if [ "$CHANNEL" = "pre-release" ]; then
-            release_label_args=(--prerelease)
+            release_label_args=(--prerelease --latest=false)
           else
             release_label_args=(--latest)
           fi

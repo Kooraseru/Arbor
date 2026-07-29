@@ -11,6 +11,24 @@ payload builder as the publish workflow. Source-only authoring surfaces such as
 `AGENTS.md`, Python caches, and Rust build output are excluded from generated
 pre-release/release shapes.
 
+## Active Validate Workflow
+
+`.github/workflows/validate.yml`
+
+Owns repository validation. Do not add local-only validation scripts or editor
+tasks that run checks outside the workflow model. If a check matters, add it as
+a validation stage here, then local runs may use the same command.
+
+Stages:
+
+- Tooling Contracts: shell syntax, Python syntax, workflow contracts, and
+  facade generation behavior.
+- Package Build: generated RBXM package export.
+- Documentation Build: localized content rendering, changelog construction,
+  MkDocs builds, and Roblox reference validation.
+- Luau Analysis: package source analyzer checks through the checked-in analyzer
+  wrapper.
+
 ## Active Publish Workflow
 
 `.github/workflows/publish.yml`
@@ -54,23 +72,6 @@ Order:
 12. Dispatch the Pages workflow from `source`.
 
 `pre-release` and `release` are never merged into each other.
-
-Local simulation:
-
-```bash
-bash .github/scripts/test-publish-workflow.sh .generated
-```
-
-VS Code task:
-
-```text
-Publication: Test Publish Workflow
-```
-
-This does not push branches or tags. It proves local payload generation,
-publication manifests, generated repo shape, generated branch commits, version
-tag creation/replacement, commit provenance, and collected Pages publication
-state against a temporary local Git remote.
 
 Publish creates or replaces generated branch refs, git tags, and GitHub Release
 records. Existing GitHub Release records for the selected version are edited in

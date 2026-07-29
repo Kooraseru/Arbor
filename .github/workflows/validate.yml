@@ -1,0 +1,141 @@
+name: Validate
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - source
+  push:
+    branches:
+      - source
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  tooling:
+    name: Tooling Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: false
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validate shell and Python tooling
+        shell: bash
+        run: |
+          bash -n .github/scripts/build-publication-payload.sh
+          bash -n .github/scripts/export-rbxm.sh
+          bash -n .github/scripts/publish-generated-branch.sh
+          bash -n .github/scripts/write-release-notes.sh
+          python .github/scripts/validate-python-scripts.py
+          python .github/scripts/validate-workflow-contracts.py
+
+      - name: Validate facade generation
+        shell: bash
+        run: |
+          python tools/test-generate-facade.py
+
+  package:
+    name: Package Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: false
+          persist-credentials: false
+
+      - name: Export package artifact
+        shell: bash
+        run: |
+          bash .github/scripts/export-rbxm.sh src/arbor@1.1.0 .generated/repo/validation/assets/Arbor.rbxm Arbor
+
+  docs:
+    name: Documentation Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: false
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install docs dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install mkdocs-material pyyaml
+
+      - name: Build localized docs
+        shell: bash
+        run: |
+          python .github/scripts/render-localized-content.py --output-root .generated/shared/content
+          python .github/scripts/construct-changelog.py --content-root .generated/shared/content --output .generated/shared/content/generated/CHANGELOG.md
+          mapfile -t languages < <(python .github/scripts/render-localized-content.py --content-root .generated/shared/content --list-languages)
+          default_language="${languages[0]}"
+
+          for language in "${languages[@]}"; do
+            python .github/scripts/construct-changelog.py --content-root .generated/shared/content --language "$language" --output ".generated/shared/content/locales/$language/wiki/reference/changelog.md"
+            rm -rf ".generated/shared/content/locales/$language/wiki/assets"
+            cp -R content/assets ".generated/shared/content/locales/$language/wiki/assets"
+            mkdir -p .generated/shared
+            config_path=".generated/shared/mkdocs-$language.yml"
+            cp .github/mkdocs.yml "$config_path"
+
+            site_url="https://kooraseru.github.io/Arbor/"
+            site_dir="$GITHUB_WORKSPACE/.generated/shared/pages"
+            if [ "$language" != "$default_language" ]; then
+              site_url="https://kooraseru.github.io/Arbor/$language/"
+              site_dir="$GITHUB_WORKSPACE/.generated/shared/pages/$language"
+            fi
+
+            python .github/scripts/configure-mkdocs-language.py --config "$config_path" --content-root .generated/shared/content --language "$language" --site-url "$site_url" --alternate-site-url https://kooraseru.github.io/Arbor/
+            export ARBOR_WIKI_LANGUAGE="$language"
+            export ARBOR_CONTENT_ROOT=".generated/shared/content"
+            python .github/scripts/run-mkdocs.py build --config-file "$config_path" --site-dir "$site_dir"
+          done
+
+      - name: Validate Roblox references
+        shell: bash
+        run: |
+          python .github/scripts/validate-roblox-references.py --content-root .generated/shared/content
+
+  luau:
+    name: Luau Analysis
+    runs-on: windows-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: false
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Analyze Luau source
+        shell: pwsh
+        run: |
+          .github/scripts/analyze-luau.ps1
