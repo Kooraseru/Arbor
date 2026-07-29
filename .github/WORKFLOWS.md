@@ -44,9 +44,9 @@ Order:
 7. Write `.github/publication.json` into the generated payload.
 8. Replace the selected generated branch with
    `.github/scripts/publish-generated-branch.sh`.
-9. Tag the generated branch commit as `v<version>`.
-10. Create or update the GitHub Release for `v<version>`.
-11. The generated branch push refreshes Pages through the active Pages workflow.
+9. Create or update the GitHub Release for `v<version>`.
+10. Create or replace the `v<version>` tag at the generated publication commit.
+11. Dispatch the Pages workflow from `source`.
 
 `pre-release` and `release` are never merged into each other.
 
@@ -69,16 +69,19 @@ state against a temporary local Git remote.
 
 Publish creates or replaces generated branch refs, git tags, and GitHub Release
 records. Existing GitHub Release records for the selected version are edited in
-place and their generated asset is uploaded with `--clobber`. `pre-release`
-publishes a GitHub Release labeled `Pre-release`; `release` publishes a normal
-latest release.
+place and their generated asset is uploaded with `--clobber`. Release tags are
+created by the GitHub Release step after the generated release asset exists;
+generated branch replacement does not create tags. `pre-release` publishes a
+GitHub Release labeled `Pre-release`; `release` publishes a normal latest
+release.
 
 ## Active Pages Workflow
 
 .github/workflows/pages.yml
 
-It reads `.github/publication.json` from `release` and `pre-release`, checks out
-the recorded source commits, and builds:
+Pages runs only from the `source` workflow ref. It reads `.github/publication.json`
+from `release` and `pre-release`, checks out the recorded source commits, and
+builds:
 
 ```text
 release docs      -> site root

@@ -151,8 +151,10 @@ sourceCommit
 Publish creates or replaces generated branch refs, git tags, and GitHub Release
 records. When a GitHub Release already exists for the selected version, Publish
 edits that release record in place and uploads the generated asset with
-`--clobber`. `pre-release` uses GitHub's `Pre-release` label; `release` uses a
-normal latest release.
+`--clobber`. Release tags are created by the GitHub Release step after the
+generated release asset exists; generated branch replacement does not create
+tags. `pre-release` uses GitHub's `Pre-release` label; `release` uses a normal
+latest release.
 
 Generated publication payloads are whitelist-built from source-owned inputs.
 Source-only authoring surfaces such as `.generated/`, `.vscode/`, `docs/`,
@@ -188,7 +190,8 @@ test versions such as `local-pre-release` and `local-release`.
 
 ## Pages Publication View
 
-Pages is built by source-owned tooling.
+Pages is built by source-owned tooling and deploys only from the Pages workflow
+running on `source`.
 
 The active Pages workflow reads `.github/publication.json` from `release` and
 `pre-release`, then checks out the `sourceCommit` values recorded by those

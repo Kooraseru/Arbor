@@ -131,6 +131,7 @@ jobs:
           python -m json.tool ".generated/repo/$CHANNEL/.github/publication.json" >/dev/null
 
       - name: Replace generated branch
+        id: generated
         shell: bash
         env:
           CHANNEL: ${{ inputs.channel }}
@@ -143,12 +144,13 @@ jobs:
 
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          bash .github/scripts/publish-generated-branch.sh "$publication_path" "$remote_url" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "v$VERSION"
+          bash .github/scripts/publish-generated-branch.sh "$publication_path" "$remote_url" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "$GITHUB_OUTPUT"
 
       - name: Create or update GitHub Release
         shell: bash
         env:
           CHANNEL: ${{ inputs.channel }}
+          GENERATED_COMMIT: ${{ steps.generated.outputs.generated_commit }}
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
           VERSION: ${{ inputs.version }}
@@ -156,6 +158,7 @@ jobs:
           tag="v$VERSION"
           notes_path=".generated/repo/$CHANNEL/notes.md"
           asset_path=".generated/repo/$CHANNEL/assets/Arbor.rbxm"
+          remote_url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
           release_label_args=()
 
           if [ "$CHANNEL" = "pre-release" ]; then
@@ -164,7 +167,7 @@ jobs:
             release_label_args=(--latest)
           fi
 
-          bash .github/scripts/export-rbxm.sh src "$asset_path" Arbor
+          bash .github/scripts/export-rbxm.sh src/arbor@1.1.0 "$asset_path" Arbor
           bash .github/scripts/write-release-notes.sh "$notes_path" "release-notes/$tag.toml" "$SOURCE_COMMIT" "$asset_path"
 
           if gh release view "$tag" >/dev/null 2>&1; then
@@ -174,10 +177,33 @@ jobs:
               "${release_label_args[@]}"
             gh release upload "$tag" "$asset_path" --clobber
             echo "Updated GitHub Release for $tag."
+
+            if git ls-remote --exit-code --tags "$remote_url" "refs/tags/$tag" >/dev/null 2>&1; then
+              git push --quiet "$remote_url" --delete "$tag"
+            fi
+
+            if git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then
+              git tag -d "$tag" >/dev/null
+            fi
+
+            git -c tag.gpgSign=false tag "$tag" "$GENERATED_COMMIT"
+            git push --quiet "$remote_url" "refs/tags/$tag:refs/tags/$tag"
           else
+            if git ls-remote --exit-code --tags "$remote_url" "refs/tags/$tag" >/dev/null 2>&1; then
+              git push --quiet "$remote_url" --delete "$tag"
+            fi
+
             gh release create "$tag" "$asset_path" \
+              --target "$GENERATED_COMMIT" \
               --title "$tag" \
               --notes-file "$notes_path" \
               "${release_label_args[@]}"
             echo "Created GitHub Release for $tag."
           fi
+
+      - name: Refresh Pages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          gh workflow run pages.yml --ref source

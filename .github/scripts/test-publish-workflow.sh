@@ -10,6 +10,7 @@ repo_path="$output_root_path/repo"
 shared_generated_path="$output_root_path/shared/content/generated"
 source_commit="$(git -C "$repo_root" rev-parse HEAD)"
 remote_path="$output_root_path/shared/test/publish-remote.git"
+test_output_path="$output_root_path/shared/test"
 
 case "$output_root_path" in
 	"$repo_root"/*) ;;
@@ -67,12 +68,12 @@ bash "$repo_root/.github/scripts/build-publication-payload.sh" "$repo_root" "$re
 bash "$repo_root/.github/scripts/build-publication-payload.sh" "$repo_root" "$repo_path/release" release "$version" "$source_commit" "2026-07-27T00:00:00Z"
 
 rm -rf -- "$remote_path"
-mkdir -p -- "$(dirname -- "$remote_path")"
+mkdir -p -- "$test_output_path"
 git -c init.defaultBranch=source init --bare "$remote_path" >/dev/null
-bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/pre-release" "$remote_path" pre-release "$version" "$source_commit" "$tag" >/dev/null
-bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/pre-release" "$remote_path" pre-release "$version" "$source_commit" "$tag" >/dev/null
-bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/release" "$remote_path" release "$version" "$source_commit" "$tag" >/dev/null
-bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/release" "$remote_path" release "$version" "$source_commit" "$tag" >/dev/null
+bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/pre-release" "$remote_path" pre-release "$version" "$source_commit" "$test_output_path/pre-release.env" >/dev/null
+bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/pre-release" "$remote_path" pre-release "$version" "$source_commit" "$test_output_path/pre-release.env" >/dev/null
+bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/release" "$remote_path" release "$version" "$source_commit" "$test_output_path/release.env" >/dev/null
+bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/release" "$remote_path" release "$version" "$source_commit" "$test_output_path/release.env" >/dev/null
 
 mkdir -p -- "$shared_generated_path"
 
@@ -145,6 +146,13 @@ PY
 
 git --git-dir="$remote_path" rev-parse refs/heads/pre-release >/dev/null
 git --git-dir="$remote_path" rev-parse refs/heads/release >/dev/null
+if git --git-dir="$remote_path" rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then
+	echo "Generated branch publisher must not create release tag before release creation: $tag" >&2
+	exit 1
+fi
+
+release_commit="$(git --git-dir="$remote_path" rev-parse refs/heads/release)"
+git --git-dir="$remote_path" update-ref "refs/tags/$tag" "$release_commit"
 git --git-dir="$remote_path" rev-parse "refs/tags/$tag" >/dev/null
 
 "$python_cmd" - "$remote_path" "$source_commit" "$version" "$tag" <<'PY'
