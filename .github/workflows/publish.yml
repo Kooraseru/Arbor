@@ -1,0 +1,233 @@
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Generated publication branch to replace.
+        required: true
+        type: choice
+        options:
+          - pre-release
+          - release
+      version:
+        description: Release note version to publish, without the leading v.
+        required: true
+        type: choice
+        options:
+          - 1.0.1
+
+permissions:
+  actions: write
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+concurrency:
+  group: publish-${{ inputs.channel }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish ${{ inputs.channel }}
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - name: Require source workflow ref
+        shell: bash
+        run: |
+          if [ "$GITHUB_REF_NAME" != "source" ]; then
+            echo "Publish must be dispatched from source, got $GITHUB_REF_NAME." >&2
+            exit 1
+          fi
+
+      - name: Require release token
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+        run: |
+          if [ -z "${TOKEN:-}" ]; then
+            echo "Missing RELEASE_TOKEN repository secret." >&2
+            echo "Add a token that can push generated branches/tags and trigger the downstream Pages workflow." >&2
+            exit 1
+          fi
+
+          if [ -z "${SIGNING_KEY:-}" ]; then
+            echo "Missing RELEASE_SIGNING_KEY environment secret." >&2
+            echo "Add the ASCII-armored private GPG key used to sign generated publication commits and tags." >&2
+            exit 1
+          fi
+
+      - name: Checkout source
+        uses: actions/checkout@v5
+        with:
+          ref: source
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - name: Resolve immutable source commit
+        id: source
+        shell: bash
+        run: |
+          git fetch origin source:refs/remotes/origin/source --no-tags
+          source_commit="$(git rev-parse HEAD)"
+
+          if ! git branch -r --contains "$source_commit" | grep -Eq 'origin/source$'; then
+            echo "Checked out source HEAD is not contained in origin/source: $source_commit" >&2
+            exit 1
+          fi
+
+          echo "commit=$source_commit" >> "$GITHUB_OUTPUT"
+          echo "Resolved source commit: $source_commit"
+
+      - name: Validate inputs
+        id: publication
+        shell: bash
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          case "$CHANNEL" in
+            pre-release|release) ;;
+            *)
+              echo "Unsupported channel: $CHANNEL" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z][0-9A-Za-z.-]*)?$ ]]; then
+            echo "Version must look like 1.1.0 or 1.1.0-beta.2: $VERSION" >&2
+            exit 1
+          fi
+
+          if [ ! -f "release-notes/v$VERSION.toml" ]; then
+            echo "No release note exists for v$VERSION. Add release-notes/v$VERSION.toml before publishing." >&2
+            exit 1
+          fi
+
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Validate publish tooling
+        shell: bash
+        run: |
+          bash -n .github/scripts/build-publication-payload.sh
+          bash -n .github/scripts/export-rbxm.sh
+          bash -n .github/scripts/publish-generated-branch.sh
+          bash -n .github/scripts/write-release-notes.sh
+          python .github/scripts/validate-python-scripts.py
+          python .github/scripts/validate-workflow-contracts.py
+
+      - name: Configure release signing
+        shell: bash
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+          RELEASE_SIGNING_PASSPHRASE: ${{ secrets.RELEASE_SIGNING_PASSPHRASE }}
+        run: |
+          printf '%s' "$RELEASE_SIGNING_KEY" | gpg --batch --import
+
+          cat > "$RUNNER_TEMP/gpg-wrapper" <<'EOF'
+          #!/usr/bin/env bash
+          exec gpg --batch --yes --pinentry-mode loopback --passphrase "${RELEASE_SIGNING_PASSPHRASE:-}" "$@"
+          EOF
+          chmod +x "$RUNNER_TEMP/gpg-wrapper"
+
+          git config --global user.name "Kooraseru"
+          git config --global user.email "kooraseru.social@gmail.com"
+          git config --global user.signingkey "2043BE65B39C7DC5"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgSign true
+          git config --global gpg.program "$RUNNER_TEMP/gpg-wrapper"
+
+      - name: Build publication payload
+        shell: bash
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          VERSION: ${{ inputs.version }}
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
+        run: |
+          generated_at="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          bash .github/scripts/build-publication-payload.sh "$GITHUB_WORKSPACE" ".generated/repo/$CHANNEL" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "$generated_at"
+          python -m json.tool ".generated/repo/$CHANNEL/.github/publication.json" >/dev/null
+
+      - name: Replace generated branch
+        id: generated
+        shell: bash
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          RELEASE_SIGNING_PASSPHRASE: ${{ secrets.RELEASE_SIGNING_PASSPHRASE }}
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
+          VERSION: ${{ inputs.version }}
+          TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          publication_path="$GITHUB_WORKSPACE/.generated/repo/$CHANNEL"
+          remote_url="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          bash .github/scripts/publish-generated-branch.sh "$publication_path" "$remote_url" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "$GITHUB_OUTPUT"
+
+      - name: Replace GitHub Release
+        shell: bash
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          GENERATED_COMMIT: ${{ steps.generated.outputs.generated_commit }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          RELEASE_SIGNING_PASSPHRASE: ${{ secrets.RELEASE_SIGNING_PASSPHRASE }}
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          tag="v$VERSION"
+          notes_path=".generated/repo/$CHANNEL/notes.md"
+          asset_path=".generated/repo/$CHANNEL/assets/Arbor.rbxm"
+          remote_url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          release_label_args=()
+
+          if [ "$CHANNEL" = "pre-release" ]; then
+            release_label_args=(--draft=false --prerelease --latest=false)
+          else
+            release_label_args=(--draft=false --prerelease=false --latest)
+          fi
+
+          bash .github/scripts/export-rbxm.sh src/arbor@1.1.0 "$asset_path" Arbor
+          bash .github/scripts/write-release-notes.sh "$notes_path" "release-notes/$tag.toml" "$SOURCE_COMMIT" "$asset_path"
+          git fetch "$remote_url" "refs/heads/$CHANNEL" --depth=1
+          git cat-file -e "$GENERATED_COMMIT^{commit}"
+          git verify-commit "$GENERATED_COMMIT"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release delete "$tag" --yes
+            echo "Deleted existing GitHub Release for $tag."
+          fi
+
+          if git ls-remote --exit-code --tags "$remote_url" "refs/tags/$tag" >/dev/null 2>&1; then
+            git push --quiet "$remote_url" ":refs/tags/$tag"
+            echo "Deleted existing remote tag $tag."
+          fi
+
+          if git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then
+            git tag -d "$tag" >/dev/null
+          fi
+
+          git tag -s -m "$tag" "$tag" "$GENERATED_COMMIT"
+          git verify-tag "$tag"
+          git push --quiet "$remote_url" "refs/tags/$tag:refs/tags/$tag"
+
+          gh release create "$tag" "$asset_path" \
+            --verify-tag \
+            --title "$tag" \
+            --notes-file "$notes_path" \
+            "${release_label_args[@]}"
+          echo "Created GitHub Release for $tag."
+
+      - name: Refresh Pages
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run pages.yml --ref source

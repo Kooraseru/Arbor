@@ -1,0 +1,40 @@
+# Roblox Creator Docs and Luau references used by Arbor English public wiki pages.
+#
+# Keep this small and concrete. Add entries when Arbor docs actually reference
+# a Roblox API term or Luau docs concept.
+
+[references.Instance]
+kind = "Class"
+url = "https://create.roblox.com/docs/reference/engine/classes/Instance"
+label = "Instance"
+summary = "Roblox base class for objects in the data model."
+
+[references.ModuleScript]
+kind = "Class"
+url = "https://create.roblox.com/docs/reference/engine/classes/ModuleScript"
+label = "ModuleScript"
+summary = "Container instance whose source returns a value when required."
+
+[references.ExternType]
+kind = "Luau"
+url = "https://luau.org/types-library/#extern-type-instance"
+label = "extern type"
+summary = "Luau type-function representation for a host-provided type, such as a Roblox Instance class."
+
+[references.TypeFunctionLibrary]
+kind = "Luau"
+url = "https://luau.org/types-library/"
+label = "types library"
+summary = "Luau library used inside type functions to inspect, create, and transform types."
+
+[references.LuauArray]
+kind = "Luau"
+url = "https://create.roblox.com/docs/luau/tables#arrays"
+label = "{any}"
+summary = "Luau table used as an array."
+
+[references.LuauDictionary]
+kind = "Luau"
+url = "https://create.roblox.com/docs/luau/tables#dictionaries"
+label = "Dictionary"
+summary = "Luau table used as a key-value dictionary."

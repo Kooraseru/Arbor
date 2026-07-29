@@ -1,0 +1,22 @@
+[changelog]
+title = "変更履歴"
+intro = "Arbor パッケージの主な変更は、リリースノートから生成されます。"
+empty = "公開済みのリリースノートはまだありません。"
+stable = "安定版"
+pre_release = "プレリリース"
+
+[releases.v1_0_1]
+version = "v1.0.1"
+
+[releases.v1_0_1.sections.summary]
+kind = "prose"
+heading = "概要"
+body = "アナライザーから参照できる Roblox インスタンスツリーへの型付きアクセスを中心とした、Arbor 最初の安定版リリースです。"
+
+[releases.v1_0_1.sections.changes]
+kind = "list"
+heading = "変更点"
+item_1 = "直下の子の名前と子レコードを扱うヘルパーを追加しました。"
+item_2 = "クラスで絞り込んだ子を扱うヘルパーを追加しました。"
+item_3 = "直下の `ModuleScript` を検証しながら読み込む機能を追加しました。"
+item_4 = "`Arbor.rbxm` リリースアセットを追加しました。"

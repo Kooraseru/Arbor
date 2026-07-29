@@ -1,0 +1,4 @@
+name = "English"
+native_name = "English"
+locale = "en"
+default = true
