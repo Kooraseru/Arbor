@@ -155,17 +155,14 @@ sourceCommit
 ```
 
 Publish creates or replaces generated branch refs, signed annotated git tags,
-and GitHub Release records. When a GitHub Release already exists for the
-selected version, Publish edits that release record in place and uploads the
-generated asset with `--clobber`. Release tags are created by the GitHub
-Release step after the generated release asset exists; generated branch
-replacement does not create tags. `pre-release` uses GitHub's `Pre-release`
-label; `release` uses a normal latest release. When an existing latest release
-is being replaced as a pre-release, Publish first clears its latest status
-before applying pre-release status. When an existing pre-release is being
-replaced as a stable release, Publish first clears its pre-release status before
-making it latest. GitHub rejects either conflicting state transition when it is
-attempted as one release mutation.
+and GitHub Release records. Publication replacement is destructive for the
+selected version. Publish checks for an existing GitHub Release and deletes it,
+then checks for and deletes the existing remote tag. This includes draft
+releases. Publish then creates and verifies a new signed annotated tag at the
+generated publication commit, pushes that tag, and creates a new GitHub Release
+with the generated asset. If only the tag exists, only the tag is deleted.
+Generated branch replacement does not create tags. `pre-release` uses GitHub's
+`Pre-release` label; `release` uses a normal latest release.
 
 After publication, Publish explicitly dispatches the Pages workflow from
 `source` with `GITHUB_TOKEN` and `actions: write`. GitHub allows

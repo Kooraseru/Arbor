@@ -58,22 +58,37 @@ def main() -> None:
     require(publish, r"commit\.gpgsign true", "Publish signs generated commits")
     require(publish, r"tag\.gpgSign true", "Publish signs generated tags")
     require(publish, r"id:\s+generated", "Publish captures generated branch commit")
-    require(publish, r"name:\s+Create or update GitHub Release", "Publish creates or updates GitHub Release")
+    require(publish, r"name:\s+Replace GitHub Release", "Publish replaces GitHub Release")
     require(publish, r"GENERATED_COMMIT: \$\{\{ steps\.generated\.outputs\.generated_commit \}\}", "Publish consumes generated branch commit")
     require(publish, r"release_label_args=\(\)", "Publish selects GitHub Release label arguments")
-    require(publish, r"release_label_args=\(--prerelease --latest=false\)", "Publish labels pre-release GitHub Releases and prevents latest")
-    require(publish, r"release_label_args=\(--latest\)", "Publish labels stable GitHub Releases as latest")
+    require(publish, r"release_label_args=\(--draft=false --prerelease --latest=false\)", "Publish atomically publishes pre-release GitHub Releases")
+    require(publish, r"release_label_args=\(--draft=false --prerelease=false --latest\)", "Publish atomically publishes stable GitHub Releases")
     require(publish, r"export-rbxm\.sh src/arbor@1\.1\.0", "Publish exports versioned Arbor package root")
-    require(publish, r"gh release edit \"\$tag\"", "Publish edits existing GitHub Release")
-    require(publish, r'gh release edit "\$tag" --latest=false', "Publish demotes an existing latest release before applying pre-release status")
-    require(publish, r'gh release edit "\$tag" --prerelease=false', "Publish clears existing pre-release status before applying latest status")
-    require(publish, r"gh release upload \"\$tag\" \"\$asset_path\" --clobber", "Publish overwrites generated release asset")
+    require(publish, r"gh release view \"\$tag\"", "Publish checks for an existing GitHub Release")
+    require(publish, r"gh release delete \"\$tag\" --yes", "Publish deletes an existing GitHub Release")
+    require(publish, r"git ls-remote --exit-code --tags \"\$remote_url\" \"refs/tags/\$tag\"", "Publish checks for an existing release tag")
+    require(publish, r"git push --quiet \"\$remote_url\" \":refs/tags/\$tag\"", "Publish deletes an existing release tag")
     require(publish, r"gh release create \"\$tag\" \"\$asset_path\"", "Publish creates release with generated asset")
+    require(publish, r"--verify-tag", "Publish requires the signed tag before release creation")
     require(publish, r"git fetch \"\$remote_url\" \"refs/heads/\$CHANNEL\" --depth=1", "Publish fetches generated commit before tagging")
     require(publish, r"git cat-file -e \"\$GENERATED_COMMIT\^\{commit\}\"", "Publish verifies generated commit object before tagging")
     require(publish, r"git verify-commit \"\$GENERATED_COMMIT\"", "Publish verifies generated commit signature before release")
     require(publish, r"git tag -s -m \"\$tag\" \"\$tag\" \"\$GENERATED_COMMIT\"", "Publish recreates release tags as signed annotated tags")
     require(publish, r"git verify-tag \"\$tag\"", "Publish verifies signed release tag before pushing")
+    if "gh release edit" in publish or "gh release upload" in publish:
+        raise SystemExit("Workflow contract violation: Publish must replace releases instead of mutating existing records")
+    replacement_order = [
+        'gh release view "$tag"',
+        'gh release delete "$tag" --yes',
+        'git ls-remote --exit-code --tags "$remote_url" "refs/tags/$tag"',
+        'git push --quiet "$remote_url" ":refs/tags/$tag"',
+        'git tag -s -m "$tag" "$tag" "$GENERATED_COMMIT"',
+        'git push --quiet "$remote_url" "refs/tags/$tag:refs/tags/$tag"',
+        'gh release create "$tag" "$asset_path"',
+    ]
+    replacement_positions = [publish.index(command) for command in replacement_order]
+    if replacement_positions != sorted(replacement_positions):
+        raise SystemExit("Workflow contract violation: Publish release replacement steps are out of order")
     require(publish, r"gh workflow run pages\.yml --ref source", "Publish refreshes Pages from source workflow")
     require(publish, r"GH_TOKEN: \$\{\{ github\.token \}\}", "Publish dispatches Pages with GITHUB_TOKEN")
     require(publish, r"TOKEN: \$\{\{ secrets\.RELEASE_TOKEN \}\}", "Publish requires RELEASE_TOKEN")

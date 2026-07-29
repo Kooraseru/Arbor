@@ -172,7 +172,7 @@ jobs:
 
           bash .github/scripts/publish-generated-branch.sh "$publication_path" "$remote_url" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "$GITHUB_OUTPUT"
 
-      - name: Create or update GitHub Release
+      - name: Replace GitHub Release
         shell: bash
         env:
           CHANNEL: ${{ inputs.channel }}
@@ -189,9 +189,9 @@ jobs:
           release_label_args=()
 
           if [ "$CHANNEL" = "pre-release" ]; then
-            release_label_args=(--prerelease --latest=false)
+            release_label_args=(--draft=false --prerelease --latest=false)
           else
-            release_label_args=(--latest)
+            release_label_args=(--draft=false --prerelease=false --latest)
           fi
 
           bash .github/scripts/export-rbxm.sh src/arbor@1.1.0 "$asset_path" Arbor
@@ -200,44 +200,30 @@ jobs:
           git cat-file -e "$GENERATED_COMMIT^{commit}"
           git verify-commit "$GENERATED_COMMIT"
 
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release delete "$tag" --yes
+            echo "Deleted existing GitHub Release for $tag."
+          fi
+
+          if git ls-remote --exit-code --tags "$remote_url" "refs/tags/$tag" >/dev/null 2>&1; then
+            git push --quiet "$remote_url" ":refs/tags/$tag"
+            echo "Deleted existing remote tag $tag."
+          fi
+
           if git rev-parse --verify --quiet "refs/tags/$tag" >/dev/null; then
             git tag -d "$tag" >/dev/null
           fi
 
           git tag -s -m "$tag" "$tag" "$GENERATED_COMMIT"
           git verify-tag "$tag"
+          git push --quiet "$remote_url" "refs/tags/$tag:refs/tags/$tag"
 
-          if gh release view "$tag" >/dev/null 2>&1; then
-            if git ls-remote --exit-code --tags "$remote_url" "refs/tags/$tag" >/dev/null 2>&1; then
-              git push --quiet "$remote_url" ":refs/tags/$tag"
-            fi
-
-            git push --quiet "$remote_url" "refs/tags/$tag:refs/tags/$tag"
-
-            if [ "$CHANNEL" = "pre-release" ]; then
-              gh release edit "$tag" --latest=false
-            else
-              gh release edit "$tag" --prerelease=false
-            fi
-
-            gh release edit "$tag" \
-              --title "$tag" \
-              --notes-file "$notes_path" \
-              "${release_label_args[@]}"
-            gh release upload "$tag" "$asset_path" --clobber
-            echo "Updated GitHub Release for $tag."
-          else
-            if git ls-remote --exit-code --tags "$remote_url" "refs/tags/$tag" >/dev/null 2>&1; then
-              git push --quiet "$remote_url" ":refs/tags/$tag"
-            fi
-
-            git push --quiet "$remote_url" "refs/tags/$tag:refs/tags/$tag"
-            gh release create "$tag" "$asset_path" \
-              --title "$tag" \
-              --notes-file "$notes_path" \
-              "${release_label_args[@]}"
-            echo "Created GitHub Release for $tag."
-          fi
+          gh release create "$tag" "$asset_path" \
+            --verify-tag \
+            --title "$tag" \
+            --notes-file "$notes_path" \
+            "${release_label_args[@]}"
+          echo "Created GitHub Release for $tag."
 
       - name: Refresh Pages
         shell: bash
