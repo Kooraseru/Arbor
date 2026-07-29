@@ -197,6 +197,7 @@ jobs:
 
           bash .github/scripts/export-rbxm.sh src/arbor@1.1.0 "$asset_path" Arbor
           bash .github/scripts/write-release-notes.sh "$notes_path" "release-notes/$tag.toml" "$SOURCE_COMMIT" "$asset_path"
+          git fetch --quiet "$remote_url" "refs/heads/$CHANNEL:refs/remotes/origin/$CHANNEL" --depth=1
 
           if gh release view "$tag" >/dev/null 2>&1; then
             gh release edit "$tag" \

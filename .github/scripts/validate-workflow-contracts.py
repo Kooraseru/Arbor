@@ -65,6 +65,7 @@ def main() -> None:
     require(publish, r"gh release edit \"\$tag\"", "Publish edits existing GitHub Release")
     require(publish, r"gh release upload \"\$tag\" \"\$asset_path\" --clobber", "Publish overwrites generated release asset")
     require(publish, r"gh release create \"\$tag\" \"\$asset_path\"", "Publish creates release with generated asset")
+    require(publish, r"git fetch --quiet \"\$remote_url\" \"refs/heads/\$CHANNEL:refs/remotes/origin/\$CHANNEL\" --depth=1", "Publish fetches generated commit before tagging")
     require(publish, r"git tag -s -m \"\$tag\" \"\$tag\" \"\$GENERATED_COMMIT\"", "Publish recreates release tags as signed annotated tags")
     require(publish, r"gh workflow run pages\.yml --ref source", "Publish refreshes Pages from source workflow")
     require(publish, r"TOKEN: \$\{\{ secrets\.RELEASE_TOKEN \}\}", "Publish requires RELEASE_TOKEN")
