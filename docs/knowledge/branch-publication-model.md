@@ -110,11 +110,17 @@ entire run.
 
 The publish workflow must be dispatched from `source`.
 
-Publishing requires `RELEASE_TOKEN` from the `release` environment. Do not fall
-back to the default `github.token`; generated branch pushes must be able to
-trigger the Pages workflow after publication. The workflow checks this secret
-before checkout or payload generation so missing environment configuration
-fails immediately.
+Publishing requires `RELEASE_TOKEN` and `RELEASE_SIGNING_KEY` from the
+`release` environment. Do not fall back to the default `github.token`;
+generated branch pushes must be able to trigger the Pages workflow after
+publication. The workflow checks these secrets before checkout or payload
+generation so missing environment configuration fails immediately.
+
+`RELEASE_SIGNING_KEY` is the ASCII-armored private GPG key for the maintainer
+release identity. `RELEASE_SIGNING_PASSPHRASE` may be provided when that key is
+passphrase-protected. Generated publication commits and release tags must be
+signed by this configured maintainer identity rather than authored as
+`github-actions[bot]`.
 
 Each publication replaces the selected generated branch with a fresh generated
 tree and writes durable branch metadata to:
@@ -138,8 +144,9 @@ Do not include the generated branch commit in this manifest. The generated
 commit does not exist until after the manifest is committed, and Git already
 provides the generated commit identity.
 
-Version tags point to generated publication commits because those commits are
-the actual published repository trees. Provenance is:
+Version tags are signed annotated tags that point to generated publication
+commits because those commits are the actual published repository trees.
+Provenance is:
 
 ```text
 tag
@@ -148,13 +155,13 @@ generated publication commit
 sourceCommit
 ```
 
-Publish creates or replaces generated branch refs, git tags, and GitHub Release
-records. When a GitHub Release already exists for the selected version, Publish
-edits that release record in place and uploads the generated asset with
-`--clobber`. Release tags are created by the GitHub Release step after the
-generated release asset exists; generated branch replacement does not create
-tags. `pre-release` uses GitHub's `Pre-release` label; `release` uses a normal
-latest release.
+Publish creates or replaces generated branch refs, signed annotated git tags,
+and GitHub Release records. When a GitHub Release already exists for the
+selected version, Publish edits that release record in place and uploads the
+generated asset with `--clobber`. Release tags are created by the GitHub
+Release step after the generated release asset exists; generated branch
+replacement does not create tags. `pre-release` uses GitHub's `Pre-release`
+label; `release` uses a normal latest release.
 
 Generated publication payloads are whitelist-built from source-owned inputs.
 Source-only authoring surfaces such as `.generated/`, `.vscode/`, `docs/`,

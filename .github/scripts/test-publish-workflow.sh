@@ -69,6 +69,11 @@ bash "$repo_root/.github/scripts/build-publication-payload.sh" "$repo_root" "$re
 
 rm -rf -- "$remote_path"
 mkdir -p -- "$test_output_path"
+export GIT_CONFIG_GLOBAL="$test_output_path/gitconfig"
+git config --global user.name "Kooraseru"
+git config --global user.email "kooraseru.social@gmail.com"
+git config --global commit.gpgsign false
+git config --global tag.gpgSign false
 git -c init.defaultBranch=source init --bare "$remote_path" >/dev/null
 bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/pre-release" "$remote_path" pre-release "$version" "$source_commit" "$test_output_path/pre-release.env" >/dev/null
 bash "$repo_root/.github/scripts/publish-generated-branch.sh" "$repo_path/pre-release" "$remote_path" pre-release "$version" "$source_commit" "$test_output_path/pre-release.env" >/dev/null

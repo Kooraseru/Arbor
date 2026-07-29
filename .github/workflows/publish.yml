@@ -45,10 +45,17 @@ jobs:
         shell: bash
         env:
           TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
         run: |
           if [ -z "${TOKEN:-}" ]; then
             echo "Missing RELEASE_TOKEN repository secret." >&2
             echo "Add a token that can push generated branches/tags and trigger the downstream Pages workflow." >&2
+            exit 1
+          fi
+
+          if [ -z "${SIGNING_KEY:-}" ]; then
+            echo "Missing RELEASE_SIGNING_KEY environment secret." >&2
+            echo "Add the ASCII-armored private GPG key used to sign generated publication commits and tags." >&2
             exit 1
           fi
 
@@ -119,6 +126,27 @@ jobs:
           python .github/scripts/validate-python-scripts.py
           python .github/scripts/validate-workflow-contracts.py
 
+      - name: Configure release signing
+        shell: bash
+        env:
+          RELEASE_SIGNING_KEY: ${{ secrets.RELEASE_SIGNING_KEY }}
+          RELEASE_SIGNING_PASSPHRASE: ${{ secrets.RELEASE_SIGNING_PASSPHRASE }}
+        run: |
+          printf '%s' "$RELEASE_SIGNING_KEY" | gpg --batch --import
+
+          cat > "$RUNNER_TEMP/gpg-wrapper" <<'EOF'
+          #!/usr/bin/env bash
+          exec gpg --batch --yes --pinentry-mode loopback --passphrase "${RELEASE_SIGNING_PASSPHRASE:-}" "$@"
+          EOF
+          chmod +x "$RUNNER_TEMP/gpg-wrapper"
+
+          git config --global user.name "Kooraseru"
+          git config --global user.email "kooraseru.social@gmail.com"
+          git config --global user.signingkey "2043BE65B39C7DC5"
+          git config --global commit.gpgsign true
+          git config --global tag.gpgSign true
+          git config --global gpg.program "$RUNNER_TEMP/gpg-wrapper"
+
       - name: Build publication payload
         shell: bash
         env:
@@ -135,6 +163,7 @@ jobs:
         shell: bash
         env:
           CHANNEL: ${{ inputs.channel }}
+          RELEASE_SIGNING_PASSPHRASE: ${{ secrets.RELEASE_SIGNING_PASSPHRASE }}
           SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
           VERSION: ${{ inputs.version }}
           TOKEN: ${{ secrets.RELEASE_TOKEN }}
@@ -142,8 +171,6 @@ jobs:
           publication_path="$GITHUB_WORKSPACE/.generated/repo/$CHANNEL"
           remote_url="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           bash .github/scripts/publish-generated-branch.sh "$publication_path" "$remote_url" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "$GITHUB_OUTPUT"
 
       - name: Create or update GitHub Release
@@ -152,6 +179,7 @@ jobs:
           CHANNEL: ${{ inputs.channel }}
           GENERATED_COMMIT: ${{ steps.generated.outputs.generated_commit }}
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          RELEASE_SIGNING_PASSPHRASE: ${{ secrets.RELEASE_SIGNING_PASSPHRASE }}
           SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
           VERSION: ${{ inputs.version }}
         run: |
@@ -186,15 +214,16 @@ jobs:
               git tag -d "$tag" >/dev/null
             fi
 
-            git -c tag.gpgSign=false tag "$tag" "$GENERATED_COMMIT"
+            git tag -s -m "$tag" "$tag" "$GENERATED_COMMIT"
             git push --quiet "$remote_url" "refs/tags/$tag:refs/tags/$tag"
           else
             if git ls-remote --exit-code --tags "$remote_url" "refs/tags/$tag" >/dev/null 2>&1; then
               git push --quiet "$remote_url" --delete "$tag"
             fi
 
+            git tag -s -m "$tag" "$tag" "$GENERATED_COMMIT"
+            git push --quiet "$remote_url" "refs/tags/$tag:refs/tags/$tag"
             gh release create "$tag" "$asset_path" \
-              --target "$GENERATED_COMMIT" \
               --title "$tag" \
               --notes-file "$notes_path" \
               "${release_label_args[@]}"

@@ -38,8 +38,11 @@ trap cleanup EXIT
 
 git clone --quiet --no-checkout "$remote_url" "$worktree_path"
 cd "$worktree_path"
-git config user.name "github-actions[bot]"
-git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+if [ -z "$(git config user.name || true)" ] || [ -z "$(git config user.email || true)" ]; then
+	echo "Git user.name and user.email must be configured before publishing generated branches." >&2
+	exit 1
+fi
 
 if git ls-remote --exit-code origin "refs/heads/$channel" >/dev/null 2>&1; then
 	branch_exists=true

@@ -23,7 +23,7 @@ Manual inputs:
 - `channel`: `pre-release` or `release`
 - `version`: release note version without the leading `v`
 
-Required secret:
+Required secrets:
 
 - `RELEASE_TOKEN`: token with permission to replace generated branches and tags.
   Use a token that can trigger downstream workflows; do not fall back to the
@@ -31,22 +31,28 @@ Required secret:
   start the Pages refresh workflow. It may be configured as an environment
   secret on the `release` environment; the Publish job declares that environment
   before reading the secret.
+- `RELEASE_SIGNING_KEY`: ASCII-armored private GPG key for the maintainer
+  identity that signs generated publication commits and release tags.
+- `RELEASE_SIGNING_PASSPHRASE`: optional passphrase for that signing key.
 
 Order:
 
 1. Reject dispatches not started from `source`.
-2. Enter the `release` environment and require `RELEASE_TOKEN`.
+2. Enter the `release` environment and require `RELEASE_TOKEN` and
+   `RELEASE_SIGNING_KEY`.
 3. Check out `source`.
 4. Resolve current source HEAD to a full source commit SHA.
 5. Verify that SHA belongs to `origin/source`.
-6. Build the generated publication payload with
+6. Configure Git/GPG signing for the maintainer release identity.
+7. Build the generated publication payload with
    `.github/scripts/build-publication-payload.sh`.
-7. Write `.github/publication.json` into the generated payload.
-8. Replace the selected generated branch with
+8. Write `.github/publication.json` into the generated payload.
+9. Replace the selected generated branch with
    `.github/scripts/publish-generated-branch.sh`.
-9. Create or update the GitHub Release for `v<version>`.
-10. Create or replace the `v<version>` tag at the generated publication commit.
-11. Dispatch the Pages workflow from `source`.
+10. Create or update the GitHub Release for `v<version>`.
+11. Create or replace the signed annotated `v<version>` tag at the generated
+    publication commit.
+12. Dispatch the Pages workflow from `source`.
 
 `pre-release` and `release` are never merged into each other.
 
@@ -70,10 +76,11 @@ state against a temporary local Git remote.
 Publish creates or replaces generated branch refs, git tags, and GitHub Release
 records. Existing GitHub Release records for the selected version are edited in
 place and their generated asset is uploaded with `--clobber`. Release tags are
-created by the GitHub Release step after the generated release asset exists;
-generated branch replacement does not create tags. `pre-release` publishes a
-GitHub Release labeled `Pre-release`; `release` publishes a normal latest
-release.
+created as signed annotated tags by the GitHub Release step after the generated
+release asset exists; generated branch replacement does not create tags.
+Generated commits and release tags are signed by the configured maintainer
+release identity. `pre-release` publishes a GitHub Release labeled
+`Pre-release`; `release` publishes a normal latest release.
 
 ## Active Pages Workflow
 
