@@ -160,7 +160,12 @@ selected version, Publish edits that release record in place and uploads the
 generated asset with `--clobber`. Release tags are created by the GitHub
 Release step after the generated release asset exists; generated branch
 replacement does not create tags. `pre-release` uses GitHub's `Pre-release`
-label; `release` uses a normal latest release.
+label; `release` uses a normal latest release. When an existing latest release
+is being replaced as a pre-release, Publish first clears its latest status
+before applying pre-release status. When an existing pre-release is being
+replaced as a stable release, Publish first clears its pre-release status before
+making it latest. GitHub rejects either conflicting state transition when it is
+attempted as one release mutation.
 
 After publication, Publish explicitly dispatches the Pages workflow from
 `source` with `GITHUB_TOKEN` and `actions: write`. GitHub allows

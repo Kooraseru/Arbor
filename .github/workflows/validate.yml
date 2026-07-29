@@ -135,6 +135,20 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Luau LSP
+        shell: pwsh
+        env:
+          LUAU_LSP_VERSION: "1.66.0"
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP "luau-lsp-win64.zip"
+          $installDir = Join-Path $env:GITHUB_WORKSPACE "tools\luau-lsp\bin"
+          Invoke-WebRequest `
+            -Uri "https://github.com/JohnnyMorganz/luau-lsp/releases/download/$env:LUAU_LSP_VERSION/luau-lsp-win64.zip" `
+            -OutFile $archive
+          New-Item -ItemType Directory -Force -Path $installDir | Out-Null
+          Expand-Archive -LiteralPath $archive -DestinationPath $installDir -Force
+          & (Join-Path $installDir "luau-lsp.exe") --version
+
       - name: Analyze Luau source
         shell: pwsh
         run: |
