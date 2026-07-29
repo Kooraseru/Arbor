@@ -31,12 +31,24 @@ jobs:
   publish:
     name: Publish ${{ inputs.channel }}
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - name: Require source workflow ref
         shell: bash
         run: |
           if [ "$GITHUB_REF_NAME" != "source" ]; then
             echo "Publish must be dispatched from source, got $GITHUB_REF_NAME." >&2
+            exit 1
+          fi
+
+      - name: Require release token
+        shell: bash
+        env:
+          TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -z "${TOKEN:-}" ]; then
+            echo "Missing RELEASE_TOKEN repository secret." >&2
+            echo "Add a token that can push generated branches/tags and trigger the downstream Pages workflow." >&2
             exit 1
           fi
 
@@ -126,14 +138,46 @@ jobs:
           VERSION: ${{ inputs.version }}
           TOKEN: ${{ secrets.RELEASE_TOKEN }}
         run: |
-          if [ -z "${TOKEN:-}" ]; then
-            echo "Missing RELEASE_TOKEN. Generated branch pushes need a token that can trigger downstream Pages workflows." >&2
-            exit 1
-          fi
-
           publication_path="$GITHUB_WORKSPACE/.generated/repo/$CHANNEL"
           remote_url="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           bash .github/scripts/publish-generated-branch.sh "$publication_path" "$remote_url" "$CHANNEL" "$VERSION" "$SOURCE_COMMIT" "v$VERSION"
+
+      - name: Create or update GitHub Release
+        shell: bash
+        env:
+          CHANNEL: ${{ inputs.channel }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+          SOURCE_COMMIT: ${{ steps.source.outputs.commit }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          tag="v$VERSION"
+          notes_path=".generated/repo/$CHANNEL/notes.md"
+          asset_path=".generated/repo/$CHANNEL/assets/Arbor.rbxm"
+          release_label_args=()
+
+          if [ "$CHANNEL" = "pre-release" ]; then
+            release_label_args=(--prerelease)
+          else
+            release_label_args=(--latest)
+          fi
+
+          bash .github/scripts/export-rbxm.sh src "$asset_path" Arbor
+          bash .github/scripts/write-release-notes.sh "$notes_path" "release-notes/$tag.toml" "$SOURCE_COMMIT" "$asset_path"
+
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release edit "$tag" \
+              --title "$tag" \
+              --notes-file "$notes_path" \
+              "${release_label_args[@]}"
+            gh release upload "$tag" "$asset_path" --clobber
+            echo "Updated GitHub Release for $tag."
+          else
+            gh release create "$tag" "$asset_path" \
+              --title "$tag" \
+              --notes-file "$notes_path" \
+              "${release_label_args[@]}"
+            echo "Created GitHub Release for $tag."
+          fi

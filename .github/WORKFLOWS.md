@@ -28,21 +28,25 @@ Required secret:
 - `RELEASE_TOKEN`: token with permission to replace generated branches and tags.
   Use a token that can trigger downstream workflows; do not fall back to the
   default `github.token`, because pushes made by that token do not reliably
-  start the Pages refresh workflow.
+  start the Pages refresh workflow. It may be configured as an environment
+  secret on the `release` environment; the Publish job declares that environment
+  before reading the secret.
 
 Order:
 
 1. Reject dispatches not started from `source`.
-2. Check out `source`.
-3. Resolve current source HEAD to a full source commit SHA.
-4. Verify that SHA belongs to `origin/source`.
-5. Build the generated publication payload with
+2. Enter the `release` environment and require `RELEASE_TOKEN`.
+3. Check out `source`.
+4. Resolve current source HEAD to a full source commit SHA.
+5. Verify that SHA belongs to `origin/source`.
+6. Build the generated publication payload with
    `.github/scripts/build-publication-payload.sh`.
-6. Write `.github/publication.json` into the generated payload.
-7. Replace the selected generated branch with
+7. Write `.github/publication.json` into the generated payload.
+8. Replace the selected generated branch with
    `.github/scripts/publish-generated-branch.sh`.
-8. Tag the generated branch commit as `v<version>`.
-9. The generated branch push refreshes Pages through the active Pages workflow.
+9. Tag the generated branch commit as `v<version>`.
+10. Create or update the GitHub Release for `v<version>`.
+11. The generated branch push refreshes Pages through the active Pages workflow.
 
 `pre-release` and `release` are never merged into each other.
 
@@ -62,6 +66,12 @@ This does not push branches or tags. It proves local payload generation,
 publication manifests, generated repo shape, generated branch commits, version
 tag creation/replacement, commit provenance, and collected Pages publication
 state against a temporary local Git remote.
+
+Publish creates or replaces generated branch refs, git tags, and GitHub Release
+records. Existing GitHub Release records for the selected version are edited in
+place and their generated asset is uploaded with `--clobber`. `pre-release`
+publishes a GitHub Release labeled `Pre-release`; `release` publishes a normal
+latest release.
 
 ## Active Pages Workflow
 

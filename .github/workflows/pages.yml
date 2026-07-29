@@ -47,25 +47,27 @@ jobs:
           fetch-tags: false
           persist-credentials: false
 
-      - name: Checkout release publication metadata
-        uses: actions/checkout@v5
-        continue-on-error: true
-        with:
-          ref: release
-          path: publication-release
-          fetch-depth: 1
-          fetch-tags: false
-          persist-credentials: false
+      - name: Fetch publication metadata
+        shell: bash
+        env:
+          TOKEN: ${{ github.token }}
+        run: |
+          remote_url="https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
-      - name: Checkout pre-release publication metadata
-        uses: actions/checkout@v5
-        continue-on-error: true
-        with:
-          ref: pre-release
-          path: publication-pre-release
-          fetch-depth: 1
-          fetch-tags: false
-          persist-credentials: false
+          for branch in release pre-release; do
+            path="publication-$branch"
+            mkdir -p "$path"
+
+            if ! git ls-remote --exit-code --heads "$remote_url" "$branch" >/dev/null 2>&1; then
+              echo "No generated $branch branch yet; skipping publication metadata."
+              continue
+            fi
+
+            git -C "$path" init
+            git -C "$path" remote add origin "$remote_url"
+            git -C "$path" fetch --depth=1 --no-tags origin "refs/heads/$branch"
+            git -C "$path" checkout --detach FETCH_HEAD
+          done
 
       - name: Set up Python
         uses: actions/setup-python@v6

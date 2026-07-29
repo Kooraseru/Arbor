@@ -110,9 +110,11 @@ entire run.
 
 The publish workflow must be dispatched from `source`.
 
-Publishing requires `RELEASE_TOKEN`. Do not fall back to the default
-`github.token`; generated branch pushes must be able to trigger the Pages
-workflow after publication.
+Publishing requires `RELEASE_TOKEN` from the `release` environment. Do not fall
+back to the default `github.token`; generated branch pushes must be able to
+trigger the Pages workflow after publication. The workflow checks this secret
+before checkout or payload generation so missing environment configuration
+fails immediately.
 
 Each publication replaces the selected generated branch with a fresh generated
 tree and writes durable branch metadata to:
@@ -145,6 +147,12 @@ generated publication commit
 .github/publication.json
 sourceCommit
 ```
+
+Publish creates or replaces generated branch refs, git tags, and GitHub Release
+records. When a GitHub Release already exists for the selected version, Publish
+edits that release record in place and uploads the generated asset with
+`--clobber`. `pre-release` uses GitHub's `Pre-release` label; `release` uses a
+normal latest release.
 
 Generated publication payloads are whitelist-built from source-owned inputs.
 Source-only authoring surfaces such as `.generated/`, `.vscode/`, `docs/`,
