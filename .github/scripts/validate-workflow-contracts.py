@@ -25,6 +25,7 @@ def main() -> None:
     release_note_versions = sorted(path.stem.removeprefix("v") for path in Path("release-notes").glob("v*.toml"))
 
     require(publish, r"name:\s+Publish", "Publish workflow name")
+    require(publish, r"actions:\s+write", "Publish can dispatch Pages with GITHUB_TOKEN")
     require(publish, r"environment:\s+release", "Publish job uses release environment")
     require(publish, r"workflow_dispatch:", "Publish manual dispatch")
     require(publish, r"channel:\s*\n(?:.*\n){0,8}\s+- pre-release\s*\n\s+- release", "Publish channel choices")
@@ -65,12 +66,18 @@ def main() -> None:
     require(publish, r"gh release edit \"\$tag\"", "Publish edits existing GitHub Release")
     require(publish, r"gh release upload \"\$tag\" \"\$asset_path\" --clobber", "Publish overwrites generated release asset")
     require(publish, r"gh release create \"\$tag\" \"\$asset_path\"", "Publish creates release with generated asset")
-    require(publish, r"git fetch --quiet \"\$remote_url\" \"refs/heads/\$CHANNEL:refs/remotes/origin/\$CHANNEL\" --depth=1", "Publish fetches generated commit before tagging")
+    require(publish, r"git fetch \"\$remote_url\" \"refs/heads/\$CHANNEL\" --depth=1", "Publish fetches generated commit before tagging")
+    require(publish, r"git cat-file -e \"\$GENERATED_COMMIT\^\{commit\}\"", "Publish verifies generated commit object before tagging")
+    require(publish, r"git verify-commit \"\$GENERATED_COMMIT\"", "Publish verifies generated commit signature before release")
     require(publish, r"git tag -s -m \"\$tag\" \"\$tag\" \"\$GENERATED_COMMIT\"", "Publish recreates release tags as signed annotated tags")
+    require(publish, r"git verify-tag \"\$tag\"", "Publish verifies signed release tag before pushing")
     require(publish, r"gh workflow run pages\.yml --ref source", "Publish refreshes Pages from source workflow")
+    require(publish, r"GH_TOKEN: \$\{\{ github\.token \}\}", "Publish dispatches Pages with GITHUB_TOKEN")
     require(publish, r"TOKEN: \$\{\{ secrets\.RELEASE_TOKEN \}\}", "Publish requires RELEASE_TOKEN")
-    if "github.token" in publish:
-        raise SystemExit("Workflow contract violation: Publish must not fall back to github.token")
+    if re.search(r"^\s+TOKEN:\s+\$\{\{\s*github\.token\s*\}\}", publish, re.MULTILINE):
+        raise SystemExit("Workflow contract violation: Publish must not use github.token for branch/tag publishing")
+    if not re.search(r"^\s+GH_TOKEN:\s+\$\{\{\s*github\.token\s*\}\}", publish, re.MULTILINE):
+        raise SystemExit("Workflow contract violation: Publish may only use github.token for Pages workflow_dispatch")
     require(generated_branch_publisher, r"Source commit: \$source_commit", "Publish generated commit provenance")
     require(generated_branch_publisher, r"Git user\.name and user\.email must be configured", "Publish generated branch refuses missing git identity")
     require(generated_branch_publisher, r"generated_commit=.*git rev-parse", "Publish generated branch resolves generated commit")

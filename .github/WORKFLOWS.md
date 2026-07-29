@@ -26,11 +26,10 @@ Manual inputs:
 Required secrets:
 
 - `RELEASE_TOKEN`: token with permission to replace generated branches and tags.
-  Use a token that can trigger downstream workflows; do not fall back to the
-  default `github.token`, because pushes made by that token do not reliably
-  start the Pages refresh workflow. It may be configured as an environment
-  secret on the `release` environment; the Publish job declares that environment
-  before reading the secret.
+  Do not use this for the Pages refresh dispatch; the workflow uses
+  `GITHUB_TOKEN` with `actions: write` for that explicit `workflow_dispatch`.
+  It may be configured as an environment secret on the `release` environment;
+  the Publish job declares that environment before reading the secret.
 - `RELEASE_SIGNING_KEY`: ASCII-armored private GPG key for the maintainer
   identity that signs generated publication commits and release tags.
 - `RELEASE_SIGNING_PASSPHRASE`: optional passphrase for that signing key.
@@ -50,7 +49,7 @@ Order:
 9. Replace the selected generated branch with
    `.github/scripts/publish-generated-branch.sh`.
 10. Create or update the GitHub Release for `v<version>`.
-11. Create or replace the signed annotated `v<version>` tag at the generated
+11. Verify and create or replace the signed annotated `v<version>` tag at the generated
     publication commit.
 12. Dispatch the Pages workflow from `source`.
 

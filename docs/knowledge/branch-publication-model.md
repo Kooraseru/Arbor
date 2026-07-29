@@ -111,10 +111,9 @@ entire run.
 The publish workflow must be dispatched from `source`.
 
 Publishing requires `RELEASE_TOKEN` and `RELEASE_SIGNING_KEY` from the
-`release` environment. Do not fall back to the default `github.token`;
-generated branch pushes must be able to trigger the Pages workflow after
-publication. The workflow checks these secrets before checkout or payload
-generation so missing environment configuration fails immediately.
+`release` environment. Do not use the default `github.token` for generated
+branch or tag pushes. The workflow checks these secrets before checkout or
+payload generation so missing environment configuration fails immediately.
 
 `RELEASE_SIGNING_KEY` is the ASCII-armored private GPG key for the maintainer
 release identity. `RELEASE_SIGNING_PASSPHRASE` may be provided when that key is
@@ -162,6 +161,12 @@ generated asset with `--clobber`. Release tags are created by the GitHub
 Release step after the generated release asset exists; generated branch
 replacement does not create tags. `pre-release` uses GitHub's `Pre-release`
 label; `release` uses a normal latest release.
+
+After publication, Publish explicitly dispatches the Pages workflow from
+`source` with `GITHUB_TOKEN` and `actions: write`. GitHub allows
+`workflow_dispatch` events created by `GITHUB_TOKEN`; relying on generated
+branch push events is invalid because Pages must only deploy from the
+source-owned Pages workflow.
 
 Generated publication payloads are whitelist-built from source-owned inputs.
 Source-only authoring surfaces such as `.generated/`, `.vscode/`, `docs/`,
