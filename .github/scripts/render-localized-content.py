@@ -61,8 +61,12 @@ def parse_simple_value(value: str) -> object:
 def parse_simple_toml(path: Path) -> dict:
     root: dict[str, object] = {}
     current = root
+    lines = path.read_text(encoding="utf-8").splitlines()
+    line_number = 0
 
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+    while line_number < len(lines):
+        line_number += 1
+        line = lines[line_number - 1]
         stripped = line.strip()
         if not stripped or stripped.startswith("#"):
             continue
@@ -75,7 +79,23 @@ def parse_simple_toml(path: Path) -> dict:
         key, separator, value = stripped.partition("=")
         if not separator:
             raise SystemExit(f"{path}:{line_number}: expected key = value")
-        current[key.strip()] = parse_simple_value(value.strip())
+        value = value.strip()
+
+        if value == "'''":
+            multiline: list[str] = []
+            while line_number < len(lines):
+                line_number += 1
+                multiline_line = lines[line_number - 1]
+                if multiline_line == "'''":
+                    break
+                multiline.append(multiline_line)
+            else:
+                raise SystemExit(f"{path}:{line_number}: unterminated multiline literal string")
+
+            current[key.strip()] = "\n".join(multiline)
+            continue
+
+        current[key.strip()] = parse_simple_value(value)
 
     return root
 
@@ -141,6 +161,7 @@ def load_strings(chain: list[Locale]) -> dict[str, str]:
 
     for locale in reversed(chain):
         strings.update(flatten(load_toml(locale.path / "strings.toml")))
+        strings.update(flatten(load_toml(locale.path / "readme.toml")))
 
     return strings
 

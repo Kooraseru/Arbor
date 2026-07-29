@@ -129,6 +129,7 @@ for lane in ["pre-release", "release"]:
         "content/locales/en/CONTRIBUTING.md",
         "content/locales/en/LICENSE",
         "content/locales/ja/LICENSE",
+        "content/locales/ja/repo",
         ".github/tools/rbxm-exporter/target",
         ".github/scripts/__pycache__",
         "release-notes",

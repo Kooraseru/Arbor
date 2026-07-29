@@ -42,18 +42,25 @@ content/
   locales/
     en/
       locale.toml
+      readme.toml
       strings.toml
       roblox-references.toml
     ja/
       locale.toml
+      readme.toml
       strings.toml
       roblox-references.toml
 ```
 
 `content/pages/` owns reusable public wiki structure. `content/repo/` owns
 reusable repository-facing structure such as `README.md`, `CONTRIBUTING.md`,
-and `LICENSE`. `content/locales/<language>/` owns language-specific strings,
-display metadata, and localized Roblox/Luau reference labels.
+and `LICENSE`. `README.md` is rendered from locale-owned `readme.toml` because
+repository READMEs are long enough that pretending they are ordinary small
+string substitutions is noisy. `CONTRIBUTING.md` currently stays English across
+locales.
+
+`content/locales/<language>/` owns language-specific strings, display metadata,
+and localized Roblox/Luau reference labels.
 
 Locale fallback must be explicit in `locale.toml`. Do not silently fall back to
 the default locale from renderer or publication code.

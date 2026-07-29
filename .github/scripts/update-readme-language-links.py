@@ -18,6 +18,9 @@ LANGUAGE_TABLE_RE = re.compile(
     re.DOTALL,
 )
 LANGUAGE_TOKEN_RE = re.compile(r"\{\{\s*arbor:language\s+(?P<code>[A-Za-z0-9_-]+)\s*\}\}")
+LANGUAGE_CELL_RE = re.compile(
+    r"(?P<indent>[ \t]*)<td\b(?P<attrs>[^>]*)>\s*\{\{\s*arbor:language\s+(?P<code>[A-Za-z0-9_-]+)\s*\}\}\s*</td>\n?"
+)
 
 
 @dataclass(frozen=True)
@@ -176,6 +179,13 @@ def relative_href(source: Path, destination: Path) -> str:
 
 
 def render_tokens(text: str, current: Language, languages: dict[str, Language], publication_root: Path, default_language: str, output_path: Path) -> str:
+    def remove_unavailable_cell(match: re.Match[str]) -> str:
+        if match.group("code") in languages:
+            return match.group(0)
+        return ""
+
+    text = LANGUAGE_CELL_RE.sub(remove_unavailable_cell, text)
+
     def replace(match: re.Match[str]) -> str:
         code = match.group("code")
         language = languages.get(code)
